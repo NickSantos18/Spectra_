@@ -1,0 +1,34 @@
+# Fora da imagem: nada aqui é necessário para rodar o servidor, e deixar de
+# fora encurta o build e evita levar segredo ou banco local por engano.
+
+.git
+.github
+.venv
+node_modules
+frontend/node_modules
+dados
+*.db
+*.sqlite3
+.env
+.env.*
+!.env.example
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache*
+.pytest_tmp*
+.ruff_cache
+.coverage
+.coverage.*
+htmlcov
+coverage.json
+*.log
+tests
+frontend/tests
+scripts
+docs
+.claude
+.superpowers
+.mcp.json
+README.md
+COMO-CONTINUAR.md

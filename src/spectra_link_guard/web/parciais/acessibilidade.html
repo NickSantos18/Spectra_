@@ -1,11 +1,8 @@
 <div class="a11y-caixa">
-  <div id="a11y-painel" class="a11y-painel" hidden role="region" aria-label="Acessibilidade">
-    <p class="a11y-titulo">Acessibilidade</p>
-    <div class="a11y-linha">
-      <span class="a11y-rotulo">Tema</span>
-      <button type="button" data-a11y-tema>
-        <i data-lucide="sun-moon" aria-hidden="true"></i><span data-a11y-tema-rotulo>Tema</span>
-      </button>
+  <div id="a11y-painel" class="a11y-painel" hidden role="region" aria-label="Configurações de acessibilidade">
+    <div class="a11y-cabecalho">
+      <p class="a11y-titulo">Configurações <span>· Acessibilidade</span></p>
+      <button type="button" class="a11y-fechar" data-a11y-fechar aria-label="Fechar configurações">×</button>
     </div>
     <div class="a11y-linha">
       <span class="a11y-rotulo">Fonte</span>
@@ -29,7 +26,4 @@
       </button>
     </div>
   </div>
-  <button type="button" id="a11y-abrir" class="a11y-botao" aria-expanded="false" aria-controls="a11y-painel" aria-label="Abrir opções de acessibilidade">
-    <i data-lucide="accessibility" aria-hidden="true"></i>
-  </button>
 </div>

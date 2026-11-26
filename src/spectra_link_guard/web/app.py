@@ -28,6 +28,8 @@ from threading import Lock
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Path as ParamPath, Request, Response
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -37,9 +39,10 @@ from ..analisador import ConfiguracaoLinkGuard, LinkGuard
 from ..auth import bd as bd_auth
 from ..auth import router as router_auth
 from ..auth import usuario_atual
-from . import analises, assistente, comunidade, explorar, desafios
+from . import acessos, admin, analises, assistente, comunidade, explorar, desafios, interacoes
 from .protecao import ProtecaoHTTP, NONCE
 from ..auth import protecao as protecao_auth
+from ..auth import papeis
 from threading import BoundedSemaphore
 
 ESTATICOS = Path(__file__).parent / "static"
@@ -48,7 +51,7 @@ ESTATICOS = Path(__file__).parent / "static"
 _ATIVOS_BASE = (
     "tokens.css", "rodape.css", "animacoes.css",
     "movimento.js", "acessibilidade.js", "animacoes.js",
-    "conta.css", "conta.js", "perfil-cofre.css", "perfil-cofre.js",
+    "conta.css", "conta.js",
 )
 
 #: Ativos das telas com menu lateral (painel).
@@ -143,6 +146,8 @@ app.include_router(router_auth, tags=["acesso"])
 app.include_router(comunidade.router, tags=["comunidade"])
 app.include_router(explorar.router, tags=["explorar"])
 app.include_router(desafios.router, tags=["desafios"])
+app.include_router(interacoes.router, tags=["interações"])
+app.include_router(admin.router, tags=["admin"])
 
 
 class PedidoAnalise(BaseModel):
@@ -296,9 +301,73 @@ async def saude() -> dict[str, Any]:
     }
 
 
-@app.exception_handler(HTTPException)
-async def erro_json(request: Request, exc: HTTPException) -> JSONResponse:
-    return JSONResponse(status_code=exc.status_code, content={"erro": exc.detail},headers=exc.headers)
+#: Frases padrão do Starlette (inglês) que chegam ao usuário.
+_FRASES_HTTP = {"Not Found": "Não encontrado.", "Method Not Allowed": "Método não permitido."}
+
+
+@app.exception_handler(StarletteHTTPException)
+async def erro_json(request: Request, exc: StarletteHTTPException) -> Response:
+    # Rotas inexistentes de página ganham a página do site; a API segue em JSON.
+    if exc.status_code == 404 and not request.url.path.startswith(("/api/", "/static/")):
+        pagina = _pagina("nao-encontrado.html", *_ATIVOS_BASE, "laudo.css")
+        pagina.status_code = 404
+        return pagina
+    detalhe = _FRASES_HTTP.get(exc.detail, exc.detail) if isinstance(exc.detail, str) else exc.detail
+    return JSONResponse(status_code=exc.status_code, content={"erro": detalhe}, headers=exc.headers)
+
+
+#: Nome que a pessoa vê para cada campo da API.
+_ROTULOS = {
+    "email": "e-mail", "senha": "senha", "nome": "nome", "url": "link", "texto": "texto",
+    "titulo": "título", "bio": "bio", "foto": "foto", "token": "link de acesso",
+    "itens": "resposta", "midias": "mídias", "historico": "conversa", "depois": "posição",
+}
+
+
+def _frase_de_validacao(erro: dict[str, Any]) -> str:
+    """Uma frase em português para o primeiro campo recusado pelo Pydantic."""
+    if erro.get("type") == "json_invalid":
+        return "Os dados enviados não estão em um formato válido."
+    campo = next((str(p) for p in reversed(erro.get("loc", ())) if isinstance(p, str)), "")
+    rotulo = _ROTULOS.get(campo, campo or "dado")
+    tipo, ctx = erro.get("type", ""), erro.get("ctx") or {}
+    if campo == "email" and tipo == "value_error":
+        return "Digite um e-mail válido."
+    if tipo == "missing":
+        return f"Preencha o campo {rotulo}."
+    if tipo == "string_too_short":
+        return f"O campo {rotulo} precisa ter pelo menos {ctx.get('min_length')} caracteres."
+    if tipo == "string_too_long":
+        return f"O campo {rotulo} pode ter no máximo {ctx.get('max_length')} caracteres."
+    if tipo in ("too_short", "too_long"):
+        return f"A quantidade de itens em {rotulo} não é aceita."
+    return f"Confira o campo {rotulo}."
+
+
+@app.exception_handler(RequestValidationError)
+async def erro_validacao(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # A lista técnica do Pydantic virava "[object Object]" nas telas.
+    erros = exc.errors()
+    return JSONResponse(status_code=422, content={"erro": _frase_de_validacao(erros[0]) if erros else "Confira os dados enviados."})
+
+
+#: Rotas que não entram nos gráficos de acesso do admin.
+_SEM_CONTAGEM = ("/api/", "/static/", "/admin", "/docs", "/openapi.json")
+
+
+@app.middleware("http")
+async def contar_acessos(request: Request, proximo):
+    """Conta cada página aberta com sucesso, de forma anônima (ver web/acessos.py)."""
+    resposta = await proximo(request)
+    if (request.method == "GET" and resposta.status_code == 200
+            and resposta.headers.get("content-type", "").startswith("text/html")
+            and not request.url.path.startswith(_SEM_CONTAGEM)):
+        try:
+            usuario = await asyncio.to_thread(usuario_atual, request.cookies.get("spectra_sessao"))
+            await asyncio.to_thread(acessos.registrar, request, usuario["id"] if usuario else None)
+        except Exception as erro:  # a contagem nunca derruba a página
+            registro.warning("acesso não contado: %s", erro)
+    return resposta
 
 
 @app.middleware("http")
@@ -327,7 +396,7 @@ def _pagina(arquivo: str, *ativos: str, menu: str | None = None, perfil_proprio:
     html = html.replace('__PERFIL_PROPRIO__', 'true' if perfil_proprio else 'false')
     html = html.replace("__FUNDO_COMUNIDADE__", {"perfil": "energia-perfil", "chat": "conversas", "blog": "ondas", "forum": "forum", "explorar": "explorar"}.get(menu, ""))
     html = html.replace("</head>", '<link rel="stylesheet" href="/static/marca-fundo.css?v=' + _carimbo("marca-fundo.css") + '"></head>')
-    html = html.replace('</head>', '<link rel="stylesheet" href="/static/conta.css"><link rel="stylesheet" href="/static/perfil-cofre.css"><script src="/static/conta.js"></script><script src="/static/perfil-cofre.js"></script></head>')
+    html = html.replace('</head>', '<link rel="stylesheet" href="/static/conta.css"><script src="/static/conta.js"></script></head>')
     html = re.sub(r'(<body\b[^>]*>)', lambda m: m.group(1)+(PARCIAIS/'conta.html').read_text(encoding='utf-8'), html, count=1)
     html = _MARCADOR_PARCIAL.sub(
         lambda marcador: (PARCIAIS / f"{marcador.group(1)}.html").read_text(encoding="utf-8"),
@@ -377,6 +446,17 @@ async def painel_app(request: Request) -> Response:
     )
 
 
+@app.get("/admin", include_in_schema=False)
+async def pagina_admin(request: Request) -> Response:
+    """Administração. Quem não é admin vai para a página normal."""
+    usuario = usuario_atual(request.cookies.get("spectra_sessao"))
+    if usuario is None:
+        return RedirectResponse("/inicio?erro=entre_primeiro&proximo=%2Fadmin", status_code=303)
+    if not papeis.eh_admin(usuario):
+        return RedirectResponse("/painel", status_code=303)
+    return _pagina("admin.html", *_ATIVOS_PAINEL, "fundo.js", "admin.css", "admin.js")
+
+
 @app.get("/painel/visao-geral", include_in_schema=False)
 async def painel_visao_geral(request: Request) -> Response:
     """Dashboard com os números e gráficos das análises do usuário."""
@@ -412,6 +492,8 @@ async def pagina_comunidade(request: Request) -> Response:
         return RedirectResponse("/inicio?erro=entre_primeiro&proximo=" + quote(destino, safe=""), status_code=303)
     if request.url.path == '/painel/chat':
         return RedirectResponse('/painel/explorar#conversas', status_code=303)
+    if request.url.path == '/painel/forum':
+        return RedirectResponse('/painel/explorar', status_code=303)
     return _pagina("comunidade.html", *_ATIVOS_PAINEL, "fundo.js", "foto-editor.js", "explorar.js", "comunidade.js", "comunidade.css", menu=request.url.path.rsplit("/", 1)[-1], perfil_proprio=request.url.path=='/painel/perfil' and not request.query_params.get('usuario'))
 
 
@@ -426,13 +508,13 @@ async def painel_aprender(request: Request) -> Response:
 @app.get("/privacidade", include_in_schema=False)
 async def privacidade() -> HTMLResponse:
     """Política de Privacidade — texto modelo, editável em static/privacidade.html."""
-    return _pagina("privacidade.html", *_ATIVOS_BASE, "laudo.css", menu="privacidade")
+    return _pagina("privacidade.html", *_ATIVOS_BASE, "laudo.css", "voltar.js", menu="privacidade")
 
 
 @app.get("/termos", include_in_schema=False)
 async def termos() -> HTMLResponse:
     """Termos de Uso — texto modelo, editável em static/termos.html."""
-    return _pagina("termos.html", *_ATIVOS_BASE, "laudo.css", menu="termos")
+    return _pagina("termos.html", *_ATIVOS_BASE, "laudo.css", "voltar.js", menu="termos")
 
 @app.get('/redefinir-senha',include_in_schema=False)
 @app.get('/confirmar-email',include_in_schema=False)

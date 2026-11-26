@@ -3,7 +3,7 @@
 .app{position:relative;z-index:1}
 .social{width:100%;max-width:1100px;margin:0 auto;padding:28px 32px 90px;color:var(--texto);font-family:var(--fonte-corpo);font-size:.84rem}
 .social-card{background:var(--base-2);border:1px solid var(--linha);border-radius:0;padding:24px;margin-bottom:22px;min-width:0}
-.social h2{font-family:var(--fonte-titulo);font-weight:700;font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-2);margin:0 0 16px;line-height:1.4}
+.social h2{font-family:var(--fonte-titulo);font-weight:700;font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-2);margin:0 0 16px;line-height:1.4;overflow-wrap:anywhere}
 .social p{line-height:1.6}.social small{color:var(--texto-2);line-height:1.6}
 .social label{font-family:var(--fonte-titulo);font-weight:600;color:var(--texto-2);font-size:.78rem}
 .social input,.social textarea{box-sizing:border-box;min-width:0;width:100%;background:var(--base-2);border:1px solid var(--linha);border-radius:0;color:var(--texto);font-family:var(--fonte-corpo);font-size:.82rem;line-height:1.6;padding:10px 12px;user-select:text}
@@ -39,7 +39,7 @@
 .post-meta{font-family:var(--fonte-mono);font-size:.68rem;color:var(--texto-3)}
 .post-acoes{display:flex;gap:12px;flex-wrap:wrap}.respostas{margin-top:20px;border-top:1px solid var(--linha);padding-top:20px}
 .resposta{padding:15px 0;border-bottom:1px solid var(--linha);white-space:pre-wrap;overflow-wrap:anywhere}
-.convite-link{overflow-wrap:anywhere;user-select:text}
+
 .post-autor{display:flex;align-items:center;gap:12px;margin-bottom:20px}.post-autor button{margin-left:auto}.post-autor button[aria-pressed=true]{background:var(--base-3);border-color:var(--linha-forte);color:var(--primaria-clara)}
 .social [hidden]{display:none!important}
 #aviso:not(:empty){padding:14px;background:var(--base-3);border:1px solid var(--linha);border-left:3px solid var(--primaria-clara);border-radius:0;margin-bottom:20px}#aviso[data-erro=true]{border-left-color:var(--perigo)}
@@ -86,3 +86,37 @@ body[data-pagina=explorar] .corpo>.barra,body[data-pagina=explorar] .topo-movel{
 .social .desafio-alternativa input{width:18px;height:18px;margin-top:3px;flex-shrink:0;accent-color:var(--primaria-clara)}
 .desafio-feedback:not(:empty){padding:16px;background:var(--base-3);border-left:3px solid var(--terciaria)}.desafio-feedback[data-acertou=true]{border-color:var(--primaria-clara)}
 @media(max-width:800px){.conexoes-grade{grid-template-columns:1fr}.explorar-nav a{min-width:0;flex:1 1 0;padding:12px 3px;font-size:.58rem;flex-direction:column;gap:6px}.desafio-etapa{flex-wrap:wrap}.desafio-etapa>span{flex-basis:calc(100% - 45px)}.desafio-etapa button{flex:1}}
+/* Curtir, selo de admin e publicação fixada */
+.social .botao-curtir{background:transparent;color:var(--texto);border-color:var(--linha-forte)}
+.social .botao-curtir[aria-pressed=true]{color:var(--perigo);border-color:var(--perigo)}
+.selo-admin{font-family:var(--fonte-mono,monospace);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;background:var(--primaria);color:var(--sobre-primaria)}
+.post-fixado{font-size:.72rem;color:var(--texto-2)}
+.social-card.fixado{border-color:var(--terciaria)}
+/* Conexões: ícone de conversar e quadro de alcance */
+.conexao-conversar{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--linha-forte);color:var(--primaria-clara);flex:none}
+.conexao-conversar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.conexao-conversar:hover{border-color:var(--primaria-clara);background:var(--base-3)}
+.conexao-conversar:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
+.alcance-numeros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.alcance-numeros div{border:1px solid var(--linha);padding:12px;background:var(--base-3);min-width:0}
+.alcance-numeros dt{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-2)}
+.alcance-numeros dd{margin:4px 0 0;font-family:var(--fonte-titulo);font-size:1.6rem;font-weight:700;color:var(--texto)}
+.alcance-legenda{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 0 8px;font-size:.76rem;color:var(--texto-2)}
+.alcance-cor{display:inline-block;width:10px;height:10px}
+.alcance-cor-seguidores{background:var(--primaria-clara)}
+.alcance-cor-curtidas{background:rgb(var(--perigo-rgb) / .55)}
+.alcance-grafico{position:relative;height:220px}
+@media(max-width:480px){.alcance-numeros dd{font-size:1.25rem}.alcance-numeros dt{font-size:.6rem}}
+/* Perfil de outra pessoa: volta ao Explorar */
+.voltar-explorar{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:44px;padding:0 14px;margin-bottom:14px;border:1px solid var(--linha-forte);background:var(--base-2);color:var(--texto);text-decoration:none;font-family:var(--fonte-titulo);font-size:.8rem;font-weight:700}
+.voltar-explorar[hidden]{display:none}
+.voltar-explorar svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.voltar-explorar:hover{border-color:var(--primaria-clara);color:var(--primaria-clara)}
+.voltar-explorar:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
+
+/* Anexar mídia: só o ícone. O input fica no rótulo, visualmente oculto mas
+   focável — o clique no rótulo abre o seletor e o Tab ainda alcança o campo. */
+.midias-botao{display:grid;place-items:center;align-self:flex-start;width:44px;height:44px;border:1px solid var(--linha);background:var(--base-2);color:var(--texto-2);cursor:pointer;transition:border-color .2s,color .2s}
+.midias-botao svg{width:20px;height:20px}
+.midias-botao:hover{border-color:var(--primaria-clara);color:var(--primaria-clara)}
+.midias-botao:focus-within{outline:2px solid var(--primaria-clara);outline-offset:2px}

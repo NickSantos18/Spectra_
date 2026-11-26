@@ -17,6 +17,8 @@
 <script src="/static/acessibilidade.js"></script>
 <script src="/static/animacoes.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.js" defer integrity="sha384-WBRt9V/J/erVtkEuP91HUFRv9MvHzFiFOp4/zTDp4xkcMG7aOeIv2asTV4yxFLWa" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer
+        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
 </head>
 <body data-estado="seguro" data-pagina="__PAGINA_COMUNIDADE__" data-perfil-proprio="__PERFIL_PROPRIO__">
 <div class="fundo-fixo" aria-hidden="true"><canvas class="fundo-animado" data-efeito="__FUNDO_COMUNIDADE__"></canvas></div>
@@ -50,6 +52,7 @@
     <p id="google-estado"></p>
   </div>
 </section>
+<a id="voltar-explorar" class="voltar-explorar" href="/painel/explorar" data-voltar-explorar hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar para o Explorar</a>
 <section id="perfil-membro" class="social-card membro-grade" hidden aria-labelledby="membro-nome">
   <img id="membro-foto" class="avatar-grande" alt="" hidden><span id="membro-inicial" class="avatar-grande" aria-hidden="true"></span>
   <div><h2 id="membro-nome"></h2><p id="membro-bio"></p><p id="membro-total" class="post-meta"></p><div class="post-acoes"><button id="membro-seguir" type="button" hidden>Seguir</button><a id="membro-editar" href="/painel/perfil" hidden>Editar meu perfil</a></div></div>
@@ -61,16 +64,30 @@
 </section>
 <section id="publicacoes" hidden>
  <h2 id="perfil-postagens" hidden>Publicações</h2>
- <div class="social-card" id="convites" hidden><h2>Convidar especialista</h2><p>Crie um link válido por 7 dias e compartilhe com a pessoa convidada. Ela deve entrar com o e-mail informado.</p><form id="form-convite" class="enviar"><label class="sr-only" for="email-convite">E-mail do especialista</label><input id="email-convite" type="email" required placeholder="E-mail do especialista"><button>Criar convite</button></form><p id="link-convite" class="convite-link"></p></div>
+ 
  <form id="form-publicacao" class="social-card social-form" hidden><h2 id="compor-titulo">Nova publicação</h2><label for="post-titulo">Título</label><input id="post-titulo" minlength="5" maxlength="180" required placeholder="Sobre o que vamos conversar?"><label for="post-texto">Conteúdo</label><textarea id="post-texto" minlength="10" maxlength="20000" rows="6" required placeholder="Compartilhe conhecimento sobre cibersegurança"></textarea>
- <label for="post-midias">Adicionar fotos ou vídeos</label><input id="post-midias" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm" multiple aria-describedby="midias-ajuda">
+ <label class="midias-botao" title="Adicionar fotos ou vídeos">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9"/><path d="m3 16 5-5 4 4 2.5-2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M19 16v6"/><path d="M16 19h6"/></svg>
+   <span class="sr-only">Adicionar fotos ou vídeos</span>
+   <input id="post-midias" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm" multiple aria-describedby="midias-ajuda">
+ </label>
  <small id="midias-ajuda">Até 4 arquivos. Fotos PNG, JPEG ou WebP de até 10 MB; vídeos MP4 ou WebM de até 40 MB. Compartilhe conteúdos sobre cibersegurança.</small><div id="midias-preview" class="midias-preview"></div>
  <button type="submit">Publicar</button></form>
- <p id="blog-info" hidden>Artigos de especialistas convidados. Os membros podem ler e participar com comentários.</p>
+ <p id="blog-info" hidden>Artigos publicados pela equipe do Spectra. Os membros podem curtir e comentar.</p>
  <div id="lista-publicacoes"></div>
 </section>
 <section id="explorar-conexoes" hidden>
   <h2>Suas conexões</h2>
+  <article class="social-card alcance" aria-labelledby="alcance-titulo">
+    <h2 id="alcance-titulo">Seu alcance</h2>
+    <dl class="alcance-numeros">
+      <div><dt>Seguidores</dt><dd id="alcance-seguidores">0</dd></div>
+      <div><dt>Seguindo</dt><dd id="alcance-seguindo">0</dd></div>
+      <div><dt>Curtidas recebidas</dt><dd id="alcance-curtidas">0</dd></div>
+    </dl>
+    <p class="alcance-legenda"><span class="alcance-cor alcance-cor-seguidores"></span>seguidores <span class="alcance-cor alcance-cor-curtidas"></span>curtidas recebidas por dia · últimos 30 dias</p>
+    <div class="alcance-grafico"><canvas id="g-alcance" role="img" aria-label="Seguidores e curtidas recebidas nos últimos 30 dias"></canvas></div>
+  </article>
   <div class="conexoes-grade"><article class="social-card"><h2>Seguindo <span id="total-seguindo"></span></h2><div id="lista-seguindo"></div></article><article class="social-card"><h2>Seguidores <span id="total-seguidores"></span></h2><div id="lista-seguidores"></div></article></div>
 </section>
 <section id="explorar-desafios" hidden>

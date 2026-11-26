@@ -16,7 +16,8 @@ extras = ["tldextract>=5.1", "cryptography>=42.0"]
 web = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "pydantic[email]>=2.9", "argon2-cffi>=25.1", "Pillow>=13.0", "google-auth[requests]>=2.40"]
 # Assistente com IA nos chats; sem ele (ou sem chave), os chats usam respostas por regra.
 ia = ["anthropic>=1.12"]
-dev = ["pytest>=8.0"]
+# pytest-cov mede cobertura de linhas: python -m pytest --cov=spectra_link_guard
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 
 [project.scripts]
 spectra-link-guard = "spectra_link_guard.cli:main"

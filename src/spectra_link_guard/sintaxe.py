@@ -135,6 +135,40 @@ def _e_ip(host: str) -> bool:
         return False
 
 
+_RE_PARTE_IPV4 = {10: re.compile(r"[0-9]+"), 16: re.compile(r"[0-9a-f]*"), 8: re.compile(r"[0-7]+")}
+
+
+def _parte_ipv4(parte: str) -> int | None:
+    """Lê um componente como o navegador: decimal, 0x hexadecimal ou 0 octal."""
+    base = 10
+    if parte.startswith("0x"):
+        parte, base = parte[2:], 16
+    elif len(parte) > 1 and parte.startswith("0"):
+        parte, base = parte[1:], 8
+    if not _RE_PARTE_IPV4[base].fullmatch(parte):
+        return None
+    return int(parte, base) if parte else 0
+
+
+def _ipv4_do_navegador(host: str) -> str | None:
+    """Converte em IPv4 os hosts que o navegador trata como número (WHATWG URL).
+
+    ``0x7f000001``, ``2130706433``, ``0177.0.0.1`` e ``127.1`` abrem 127.0.0.1.
+    Devolve ``None`` quando o host é um nome de domínio.
+    """
+    partes = host.split(".")
+    if len(partes) > 1 and partes[-1] == "":
+        partes.pop()
+    ultima = partes[-1] if partes else ""
+    if not (re.fullmatch(r"[0-9]+", ultima) or re.fullmatch(r"0x[0-9a-f]*", ultima)):
+        return None
+    numeros = [_parte_ipv4(p) for p in partes] if len(partes) <= 4 else [None]
+    if None in numeros or any(n > 255 for n in numeros[:-1]) or numeros[-1] >= 256 ** (5 - len(numeros)):
+        return None
+    valor = numeros[-1] + sum(n * 256 ** (3 - i) for i, n in enumerate(numeros[:-1]))
+    return str(ipaddress.IPv4Address(valor))
+
+
 def _dominio_legitimo_da_marca(host: str, oficiais: tuple[str, ...]) -> bool:
     return any(host == d or host.endswith("." + d) for d in oficiais)
 
@@ -163,6 +197,7 @@ class ContextoURL:
     dominio_registravel: str = ""
     subdominios: list[str] = field(default_factory=list)
     e_ip: bool = False
+    ip_escrito_como: str = ""  # forma disfarçada do IP, quando o link não usa a notação comum
 
 
 _RE_URL_EMBUTIDA = re.compile(r"https?://", re.IGNORECASE)
@@ -197,6 +232,11 @@ def normalizar(url: str) -> ContextoURL:
     if not host_bruto and ctx.esquema not in ESQUEMAS_PERIGOSOS:
         ctx.erro = "Não foi possível identificar o domínio da URL."
         return ctx
+
+    # O navegador abre "0x7f000001" como 127.0.0.1; a análise usa o mesmo destino.
+    ipv4 = _ipv4_do_navegador(host_bruto) if host_bruto else None
+    if ipv4 and ipv4 != host_bruto:
+        ctx.ip_escrito_como, host_bruto = host_bruto, ipv4
 
     ctx.host_ascii = host_bruto
     ctx.host, _ = _decodificar_idna(host_bruto)
@@ -261,6 +301,11 @@ def _checar_ofuscacao(ctx: ContextoURL) -> list[Achado]:
             )
         )
     if ctx.e_ip:
+        disfarce = (
+            f" Aqui o número foi escrito de forma disfarçada: '{ctx.ip_escrito_como}' "
+            f"é o mesmo que {ctx.host_ascii}."
+            if ctx.ip_escrito_como else ""
+        )
         achados.append(
             Achado(
                 codigo="host_ip_literal",
@@ -268,10 +313,10 @@ def _checar_ofuscacao(ctx: ContextoURL) -> list[Achado]:
                 severidade=Severidade.ALTA,
                 detalhe=(
                     "Empresas sérias publicam seus serviços em domínios com nome. IP cru "
-                    "é comum em servidores descartáveis usados em golpes."
+                    "é comum em servidores descartáveis usados em golpes." + disfarce
                 ),
                 recomendacao="Não informe dados pessoais em páginas abertas por IP.",
-                evidencia={"ip": ctx.host_ascii},
+                evidencia={"ip": ctx.host_ascii, **({"escrito_como": ctx.ip_escrito_como} if ctx.ip_escrito_como else {})},
             )
         )
     if ctx.porta is not None and ctx.porta not in (80, 443):

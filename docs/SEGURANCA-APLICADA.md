@@ -22,6 +22,17 @@ As correções abaixo foram aplicadas ao código local. As animações de perfil
 
 Para cumprir a CSP, o Tailwind da entrada passou a ser compilado em CSS local. O estilo não depende mais de executar o compilador de Tailwind no navegador. Os arquivos de efeitos e a sequência da animação de perfil não foram alterados nesta etapa.
 
+### Ajustes de 29/10/2026 (teste exploratório)
+
+| Área | Comportamento aplicado |
+|---|---|
+| Análise de links | Hosts que o navegador converte em IPv4 (hexadecimal, decimal, octal, abreviado) são tratados como IP, com o mesmo peso e o IP real no laudo. A consulta TLS usa o IP convertido, então a proteção contra destinos internos também vale para eles. |
+| Login | Só tentativas com senha errada contam: 8 por conta e 30 por IP em 10 minutos. Login certo não consome limite, e erros de uma conta não bloqueiam outras pessoas na mesma rede. O freio em memória por IP foi removido. |
+| Cadastro | Só contas criadas e e-mails já existentes contam (40 por IP por hora); dados inválidos não consomem a cota. |
+| Desafios | Itens com códigos HMAC por pessoa e fase; a ordem certa não aparece no navegador. |
+| Cabeçalhos | A proteção HTTP substitui apenas os cabeçalhos que define e preserva repetidos, como vários `Set-Cookie`. |
+| Erros | Validação responde `{"erro": "frase"}`; parâmetros fora do intervalo do SQLite viram 422; página 404 própria, sem refletir o endereço. |
+
 ## Validação
 
 - Preparação para publicação em **25/10/2026**: suíte completa com **273 testes Python aprovados** e **nove testes JavaScript aprovados**. Uma advertência de depreciação do TestClient/HTTPX permanece. Os resultados abaixo registram também as verificações anteriores, em 24/10/2026.

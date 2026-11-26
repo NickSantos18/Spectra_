@@ -47,10 +47,6 @@
     }
   }
 
-  function temaPreferidoDoSistema() {
-    return window.matchMedia("(prefers-color-scheme: light)").matches ? "claro" : "escuro";
-  }
-
   function aplicarTema(tema) {
     raiz.dataset.tema = tema;
     // O ícone da aba acompanha a escolha do site, inclusive quando difere do sistema.
@@ -68,7 +64,8 @@
     raiz.dataset.altoContraste = estado;
   }
 
-  let tema = lerEscolha(CHAVE_TEMA) || temaPreferidoDoSistema();
+  // O escuro é o tema original: só vira claro por escolha da própria pessoa.
+  let tema = lerEscolha(CHAVE_TEMA) === "claro" ? "claro" : "escuro";
   let nivelFonte = lerNumero(CHAVE_FONTE, NIVEL_PADRAO);
   let contraste = lerEscolha(CHAVE_CONTRASTE) || "off";
 
@@ -76,124 +73,11 @@
   aplicarFonte(nivelFonte);
   aplicarContraste(contraste);
 
-  /* Arrastar o botão de acessibilidade para qualquer canto da tela — ele
-   * pode ficar em cima de conteúdo dependendo da página/tamanho de tela, e
-   * isto deixa a pessoa tirá-lo do caminho. A posição escolhida fica salva
-   * e vale para as próximas páginas.
-   *
-   * `caixa` é o bloco fixo que se move (botão + painel juntos); `alca` é o
-   * elemento que inicia o arrasto — só o botão, para não atrapalhar cliques
-   * dentro do painel de opções.
-   */
-  function tornarArrastavel(caixa, alca) {
-    const CHAVE_POS = "spectra:a11y-pos";
-    const LIMIAR_PX = 6; // abaixo disso ainda conta como clique, não arrasto
-
-    let arrastando = false;
-    let moveu = false;
-    let suprimirProximoClique = false;
-    let inicioX = 0;
-    let inicioY = 0;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    function limites(x, y) {
-      const r = caixa.getBoundingClientRect();
-      const maxX = Math.max(window.innerWidth - r.width, 0);
-      const maxY = Math.max(window.innerHeight - r.height, 0);
-      return [Math.min(Math.max(x, 0), maxX), Math.min(Math.max(y, 0), maxY)];
-    }
-
-    function posicionar(x, y) {
-      const [cx, cy] = limites(x, y);
-      caixa.style.left = `${cx}px`;
-      caixa.style.top = `${cy}px`;
-      caixa.style.right = "auto";
-      caixa.style.bottom = "auto";
-    }
-
-    function restaurar() {
-      try {
-        const salvo = JSON.parse(localStorage.getItem(CHAVE_POS) || "null");
-        if (salvo && Number.isFinite(salvo.x) && Number.isFinite(salvo.y)) posicionar(salvo.x, salvo.y);
-      } catch {
-        /* posição salva inválida: mantém a posição padrão do CSS */
-      }
-    }
-
-    alca.addEventListener("pointerdown", (evento) => {
-      if (evento.pointerType === "mouse" && evento.button !== 0) return;
-      arrastando = true;
-      moveu = false;
-      const r = caixa.getBoundingClientRect();
-      inicioX = evento.clientX;
-      inicioY = evento.clientY;
-      offsetX = evento.clientX - r.left;
-      offsetY = evento.clientY - r.top;
-    });
-
-    alca.addEventListener("pointermove", (evento) => {
-      if (!arrastando) return;
-      if (!moveu) {
-        const distancia = Math.hypot(evento.clientX - inicioX, evento.clientY - inicioY);
-        if (distancia < LIMIAR_PX) return;
-        moveu = true;
-        alca.setPointerCapture(evento.pointerId);
-        alca.classList.add("arrastando");
-      }
-      posicionar(evento.clientX - offsetX, evento.clientY - offsetY);
-    });
-
-    function soltar() {
-      if (!arrastando) return;
-      arrastando = false;
-      alca.classList.remove("arrastando");
-      if (moveu) {
-        // O gesto de arrasto termina em pointerup, mas o navegador ainda
-        // dispara um "click" sintético logo em seguida no mesmo elemento —
-        // é esse clique fantasma que precisa ser ignorado, não os próximos.
-        // Reseta `moveu` já aqui (não no handler de click): se por algum
-        // motivo o clique fantasma não vier (ex.: a pessoa solta e na
-        // sequência ativa o botão pelo teclado), o próximo clique real não
-        // pode ficar bloqueado para sempre.
-        suprimirProximoClique = true;
-        setTimeout(() => { suprimirProximoClique = false; }, 400);
-        try {
-          const r = caixa.getBoundingClientRect();
-          gravar(CHAVE_POS, JSON.stringify({ x: r.left, y: r.top }));
-        } catch {
-          /* sem armazenamento: a posição vale só para esta visita */
-        }
-      }
-      moveu = false;
-    }
-    alca.addEventListener("pointerup", soltar);
-    alca.addEventListener("pointercancel", soltar);
-
-    // Registrado antes do clique que abre o painel (abaixo, em montarPainel):
-    // como os dois estão no mesmo elemento, quem foi registrado primeiro
-    // roda primeiro, então isto consegue barrar o "abrir" se houve arrasto.
-    alca.addEventListener("click", (evento) => {
-      if (suprimirProximoClique) {
-        suprimirProximoClique = false;
-        evento.preventDefault();
-        evento.stopImmediatePropagation();
-      }
-    });
-
-    // A janela pode encolher (girar o celular, redimensionar) depois de a
-    // pessoa já ter arrastado o botão para um canto — reencaixa na tela.
-    window.addEventListener("resize", () => {
-      const r = caixa.getBoundingClientRect();
-      if (caixa.style.left || caixa.style.top) posicionar(r.left, r.top);
-    });
-
-    restaurar();
-  }
-
   function atualizarRotulos() {
-    document.querySelectorAll("[data-a11y-tema-rotulo]").forEach((el) => {
-      el.textContent = tema === "claro" ? "Tema claro" : "Tema escuro";
+    document.querySelectorAll("[data-a11y-tema]").forEach((el) => {
+      const acao = `Mudar para o tema ${tema === "claro" ? "escuro" : "claro"}`;
+      el.setAttribute("aria-label", acao);
+      el.title = acao;
     });
     document.querySelectorAll("[data-a11y-contraste]").forEach((el) => {
       el.setAttribute("aria-pressed", String(contraste === "on"));
@@ -203,17 +87,20 @@
     });
   }
 
-  function montarPainel() {
-    const host = document.getElementById("a11y-painel");
-    if (!host) return;
-
-    host.querySelector("[data-a11y-tema]")?.addEventListener("click", () => {
+  // O botão mora no canto superior (parcial conta.html), fora do painel.
+  function montarTema() {
+    document.querySelector("[data-a11y-tema]")?.addEventListener("click", () => {
       tema = tema === "claro" ? "escuro" : "claro";
       gravar(CHAVE_TEMA, tema);
       aplicarTema(tema);
       window.dispatchEvent(new CustomEvent("spectra:tema", { detail: tema }));
       atualizarRotulos();
     });
+  }
+
+  function montarPainel() {
+    const host = document.getElementById("a11y-painel");
+    if (!host) return;
 
     host.querySelector("[data-a11y-fonte-mais]")?.addEventListener("click", () => {
       nivelFonte = Math.min(NIVEIS_FONTE.length - 1, nivelFonte + 1);
@@ -245,27 +132,32 @@
       atualizarRotulos();
     });
 
-    atualizarRotulos();
-
-    const botao = document.getElementById("a11y-abrir");
+    // O painel abre pelo item "Configurações" (barra lateral, menu Mais do
+    // celular e rodapé das páginas sem barra lateral). Não há mais botão
+    // flutuante arrastável.
     const painel = document.getElementById("a11y-painel");
-    if (!botao || !painel) return;
+    const abridores = [...document.querySelectorAll("[data-abrir-configuracoes]")];
+    if (!painel) return;
+    let origem = null;
 
-    const caixa = document.querySelector(".a11y-caixa");
-    if (caixa) tornarArrastavel(caixa, botao);
-
-    function abrir(mostrar) {
+    function abrir(mostrar, gatilho) {
+      if (mostrar) {
+        origem = gatilho || origem;
+        // Do menu Mais (um <dialog> modal), fecha a gaveta antes: o resto da página fica inerte enquanto ela está aberta.
+        origem?.closest("dialog[open]")?.close();
+      }
       painel.hidden = !mostrar;
-      botao.setAttribute("aria-expanded", String(mostrar));
+      abridores.forEach((b) => b.setAttribute("aria-expanded", String(mostrar)));
       if (mostrar) painel.querySelector("button,a")?.focus();
-      else botao.focus();
+      else if (origem && origem.offsetParent !== null) origem.focus();
     }
-    botao.addEventListener("click", () => abrir(painel.hidden));
+    abridores.forEach((b) => b.addEventListener("click", () => abrir(painel.hidden, b)));
+    painel.querySelector("[data-a11y-fechar]")?.addEventListener("click", () => abrir(false));
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !painel.hidden) abrir(false);
     });
     document.addEventListener("click", (e) => {
-      if (!painel.hidden && !painel.contains(e.target) && e.target !== botao && !botao.contains(e.target)) {
+      if (!painel.hidden && !painel.contains(e.target) && !abridores.some((b) => b.contains(e.target))) {
         abrir(false);
       }
     });
@@ -288,7 +180,9 @@
 
   function iniciar() {
     aplicarTema(tema);
+    montarTema();
     montarPainel();
+    atualizarRotulos();
     preencherAno();
     iniciarIcones();
   }

@@ -52,17 +52,42 @@ def origem_permitida(request: Request):
     if fonte: return origem(fonte) in permitidas
     return 'spectra_sessao' not in request.cookies
 
+def _chave(request, acao, conta):
+    ip=request.client.host if request.client else 'desconhecido'
+    return f'{acao}:'+hashlib.sha256(str(conta or ip).encode()).hexdigest()
+
+
+def _excedido(segundos):
+    return HTTPException(429,'Muitas solicitações. Aguarde alguns minutos.',headers={'Retry-After':str(segundos)})
+
+
+def verificar(request, acao, maximo, segundos, *, conta=None):
+    """Recusa se o limite já foi atingido, sem contar esta tentativa.
+
+    Usado com ``registrar`` quando só alguns resultados contam (ex.: senha errada).
+    """
+    agora=bd.agora().timestamp()
+    with bd.conexao() as con:
+        total=con.execute('SELECT count(*) FROM limites_uso WHERE chave=? AND instante>?',(_chave(request,acao,conta),agora-segundos)).fetchone()[0]
+    if total>=maximo:
+        raise _excedido(segundos)
+
+
+def registrar(request, acao, *, conta=None):
+    agora=bd.agora().timestamp()
+    with bd.conexao() as con:
+        con.execute('DELETE FROM limites_uso WHERE instante<?',(agora-86400,))
+        con.execute('INSERT INTO limites_uso VALUES (?,?)',(_chave(request,acao,conta),agora))
+
+
 def limitar(request, acao, maximo, segundos, *, conta=None):
     """Janela SQLite, transação atômica; não mantém IP puro no banco."""
-    ip=request.client.host if request.client else 'desconhecido'
-    quem=conta or ip
-    digest=hashlib.sha256(str(quem).encode()).hexdigest()
-    chave=f'{acao}:{digest}'
+    chave=_chave(request,acao,conta)
     agora=bd.agora().timestamp()
     with bd.conexao() as con:
         con.execute('BEGIN IMMEDIATE')
         con.execute('DELETE FROM limites_uso WHERE instante<?',(agora-86400,))
         total=con.execute('SELECT count(*) FROM limites_uso WHERE chave=? AND instante>?',(chave,agora-segundos)).fetchone()[0]
         if total>=maximo:
-            raise HTTPException(429,'Muitas solicitações. Aguarde alguns minutos.',headers={'Retry-After':str(segundos)})
+            raise _excedido(segundos)
         con.execute('INSERT INTO limites_uso VALUES (?,?)',(chave,agora))

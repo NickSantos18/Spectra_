@@ -48,6 +48,19 @@ async function verificarLaudo(){
   assert.ok(await js("document.getElementById('aviso').textContent.includes('não pôde ser lida')"));
   await js("window.fetch=window.fetchOffline");await js("periciar('https://example.com')");
   assert.equal(await js("document.getElementById('aviso').hidden"),true);
+  // Conversa curta não cai no resumo do laudo; pergunta com saudação continua sendo pergunta.
+  await ready("!!laudoAtual");
+  assert.match(await js("respostaSobreLaudo('oi')"),/^Oi!/);
+  assert.match(await js("respostaSobreLaudo('Obrigado!')"),/^Por nada/);
+  assert.doesNotMatch(await js("respostaSobreLaudo('oi, posso abrir?')"),/^Oi!/);
+  // Em janela baixa o copiloto encolhe: não passa do topo nem fica sob a conta e o tema.
+  for(const [width,height,mobile] of [[1024,500,false],[390,600,true]]){
+    await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
+    await js("abrirCopiloto(true)");
+    assert.ok(await js("document.getElementById('copiloto').getBoundingClientRect().top>=document.querySelector('.canto-superior').getBoundingClientRect().bottom"),'copiloto sob o canto superior em '+width+'x'+height);
+    await js("abrirCopiloto(false)");
+  }
+  await command('Emulation.clearDeviceMetricsOverride');
   assert.deepEqual(erros,[]);
   console.log('Erros de interface, rede e resposta diferenciados; nova tentativa recupera o laudo.');
 }
@@ -167,12 +180,23 @@ async function verificarInicio(){
   await js("document.getElementById('inicio-recursos').scrollIntoView({behavior:'instant'})");
   await ready("document.getElementById('inicio-recursos').getBoundingClientRect().top<20");
   await captura('inicio-restante');
+  // Janela baixa de notebook: a abertura continua, desde que a cena caiba na tela.
+  for(const [width,height] of [[1170,536],[1170,500]]){
+    await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await abrir();await progresso(.28);await captura('inicio-baixa-'+height+'-zoom');
+    assert.ok(await js("new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.inicio-logo')).transform).a")>1.5,'sem zoom a '+height+'px');
+    await progresso(.82);await captura('inicio-baixa-'+height+'-apresentacao');
+    assert.equal(await js("(()=>{const r=document.querySelector('.inicio-acoes').getBoundingClientRect(),d=document.getElementById('inicio-rolar').getBoundingClientRect();return r.top>=0&&r.bottom<=d.top})()"),true,'botões fora da cena a '+height+'px');
+  }
   await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await abrir();await progresso(0);await captura('inicio-celular-logo');
   await progresso(.82);await captura('inicio-celular-apresentacao');
   assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);
   assert.equal(await js("(()=>{const r=document.querySelector('.inicio-apresentacao-conteudo').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()"),true);
-  assert.equal(await js("(()=>{const dica=document.getElementById('inicio-rolar').getBoundingClientRect(),chat=document.getElementById('abrir-chat').getBoundingClientRect(),a11y=document.getElementById('a11y-abrir').getBoundingClientRect();return dica.left>a11y.right&&dica.right<chat.left})()"),true);
+  assert.equal(await js("(()=>{const dica=document.getElementById('inicio-rolar').getBoundingClientRect(),chat=document.getElementById('abrir-chat').getBoundingClientRect();return dica.left>=0&&dica.right<chat.left})()"),true);
+  // Respostas locais: saudação é palavra inteira, senão "oi" casaria com "dois".
+  for(const [pergunta,esperado] of [['oi',/^Oi!/],['Olá, tudo bem?',/^Oi!/],['boa noite',/^Oi!/],['obrigado',/^Por nada/],['como me cadastro?',/Cadastrar-se/],['o que é phishing?',/Verificar/],['o que é o spectra?',/laudo/],['quero que me explique oq posso fazer dentro desse site',/Histórico/],['o que posso fazer com um link suspeito?',/Não clique/]])assert.match(await js(`responderPorRegra(${JSON.stringify(pergunta)})`),esperado,pergunta);
+  assert.doesNotMatch(await js("responderPorRegra('tenho dois boletos')"),/^Oi!/);
   await js("document.querySelector('[data-a11y-tema]').click()");
   await ready("document.documentElement.dataset.tema==='claro'");await progresso(0);
   assert.equal(await js("getComputedStyle(document.querySelector('.inicio-logo .marca-clara')).display"),'block');
@@ -230,107 +254,201 @@ async function verificarLogos(){
   console.log('Logos originais: texto preto no claro, branco no escuro; troca ao vivo em cinco páginas, ícone da aba e celular sem overflow. Capturas: '+temp);
 }
 
+async function verificarConfiguracoes(){
+  const visivel=sel=>`(()=>{const e=document.querySelector(${JSON.stringify(sel)});if(!e||e.hidden)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight})()`;
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel'});
+  await ready("location.pathname==='/painel'&&document.readyState==='complete'&&!!document.querySelector('.trilho [data-abrir-configuracoes]')");
+  assert.equal(await js("document.querySelectorAll('#a11y-abrir,.a11y-botao').length"),0,'o botão arrastável ainda existe');
+  assert.equal(await js("document.querySelector('.trilho [data-abrir-configuracoes]').textContent.trim()"),'Configurações');
+  assert.equal(await js("document.getElementById('a11y-painel').hidden"),true);
+  await js("document.querySelector('.trilho [data-abrir-configuracoes]').click()");
+  await ready(visivel('#a11y-painel'));
+  assert.equal(await js("document.querySelector('.trilho [data-abrir-configuracoes]').getAttribute('aria-expanded')"),'true');
+  assert.ok(await js("document.getElementById('a11y-painel').getBoundingClientRect().left>=document.querySelector('.trilho').getBoundingClientRect().right-1"),'painel cobre a barra lateral');
+  assert.ok(await js("document.getElementById('a11y-painel').textContent.includes('Acessibilidade')"));
+  const aberto=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'configuracoes-desktop.png'),Buffer.from(aberto.data,'base64'));
+  const temaAntes=await js("document.documentElement.dataset.tema");
+  assert.equal(await js("document.querySelector('#a11y-painel [data-a11y-tema]')"),null,'o tema não mora mais no painel');
+  await js("document.querySelector('.canto-superior [data-a11y-tema]').click()");
+  assert.notEqual(await js("document.documentElement.dataset.tema"),temaAntes);
+  await js("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+  assert.equal(await js("document.getElementById('a11y-painel').hidden"),true);
+  assert.equal(await js("document.activeElement===document.querySelector('.trilho [data-abrir-configuracoes]')"),true,'o foco não voltou para Configurações');
+  console.log('Configurações na barra lateral abre a acessibilidade ao lado do menu; sem botão arrastável: OK');
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel'});
+  await ready("document.readyState==='complete'&&!!document.querySelector('[data-abrir-mais]')");
+  await js("document.querySelector('[data-abrir-mais]').click()");await ready("document.getElementById('gaveta-mais').open");
+  await js("document.querySelector('#gaveta-mais [data-abrir-configuracoes]').click()");
+  await ready("!document.getElementById('gaveta-mais').open&&"+visivel('#a11y-painel'));
+  assert.ok(await js("document.getElementById('a11y-painel').getBoundingClientRect().bottom<=document.querySelector('.barra-abas').getBoundingClientRect().top+1"),'painel atrás da barra de abas');
+  const mobile=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'configuracoes-mobile.png'),Buffer.from(mobile.data,'base64'));
+  console.log('Celular: Configurações no menu Mais abre o painel acima da barra de abas: OK');
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  for(const pagina of ['/termos','/privacidade']){
+    await command('Page.navigate',{url:'http://127.0.0.1:8012'+pagina});
+    await ready("document.readyState==='complete'&&!!document.querySelector('.rodape-spectra [data-abrir-configuracoes]')");
+    assert.equal(await js("document.querySelectorAll('#a11y-abrir,.a11y-botao').length"),0);
+    await js("document.querySelector('.rodape-spectra [data-abrir-configuracoes]').click()");
+    await ready(visivel('#a11y-painel'));
+  }
+  const desktop=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'configuracoes-rodape.png'),Buffer.from(desktop.data,'base64'));
+  assert.deepEqual(erros,[]);
+  console.log('Páginas sem barra lateral abrem as configurações pelo rodapé; nenhum erro JavaScript. Capturas: '+temp);
+}
+
+async function verificarAdmin(){
+  // O master só nasce pelo terminal: o mesmo comando que a pessoa usa no servidor.
+  require('node:child_process').execFileSync(path.join(root,'.venv/Scripts/python.exe'),['-m','spectra_link_guard.admin','master','visual@example.com'],{cwd:root,env:{...process.env,SPECTRA_BD:path.join(temp,'teste.db')}});
+  // Conta comum criada sem trocar a sessão do navegador.
+  await js(`fetch('/api/auth/cadastrar',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:'Membro Teste',email:'membro@example.com',senha:'SenhaTeste123!'})}).then(r=>{if(r.status!==201)throw Error('Cadastro do membro falhou')})`);
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/admin'});
+  await ready("location.pathname==='/admin'&&document.querySelectorAll('[data-kpi]').length===4&&!!window.Chart&&!!Chart.getChart(document.getElementById('g-dias'))&&!!Chart.getChart(document.getElementById('g-horas'))");
+  await sleep(500);
+  assert.equal(await js('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),true,'admin largo demais no desktop');
+  assert.equal(await js("[...document.querySelectorAll('.adm-quadro canvas')].every(c=>c.getBoundingClientRect().right<=c.closest('.adm-quadro').getBoundingClientRect().right+1)"),true,'gráfico passa da borda do quadro');
+  assert.equal(await js("Chart.getChart(document.getElementById('g-dias')).data.labels.length"),30);
+  assert.equal(await js("Chart.getChart(document.getElementById('g-horas')).data.labels.length"),24);
+  assert.equal(await js("document.querySelector('[data-aba=admins]').hidden"),false);
+  assert.equal(await js("document.querySelector('[data-admin-link]')&&!document.querySelector('[data-admin-link]').hidden"),true);
+  console.log('Admin: quatro indicadores, crescimento de 30 dias e horário em 24 colunas: OK');
+  await js("document.querySelector('[data-aba=blog]').click()");await ready("!document.querySelector('[data-painel=blog]').hidden");
+  await js("document.querySelector('#form-publicar [value=aviso]').click();document.getElementById('pub-titulo').value='Manutenção no sábado';document.getElementById('pub-texto').value='O site fica fora do ar das 22h às 23h.';document.getElementById('form-publicar').requestSubmit()");
+  await ready("[...document.querySelectorAll('#adm-publicacoes [data-pub]')].some(i=>i.textContent.includes('Manutenção no sábado')&&i.dataset.fixado==='true')");
+  await js("document.querySelector('#form-publicar [value=blog]').click();document.getElementById('pub-titulo').value='Como reconhecer golpes por Pix';document.getElementById('pub-texto').value='Desconfie de urgência e confira o nome do recebedor.';document.getElementById('form-publicar').requestSubmit()");
+  await ready("document.querySelectorAll('#adm-publicacoes [data-pub]').length===2");
+  await js("[...document.querySelectorAll('#adm-publicacoes [data-pub]')].find(i=>i.textContent.includes('Manutenção')).querySelector('[data-fixar]').click()");
+  await ready("[...document.querySelectorAll('#adm-publicacoes [data-pub]')].find(i=>i.textContent.includes('Manutenção')).dataset.fixado==='false'");
+  console.log('Blog e avisos: aviso fixado, post publicado e desafixar: OK');
+  await js("document.querySelector('[data-aba=admins]').click();document.getElementById('busca-conta').value='membro';document.getElementById('form-busca').requestSubmit()");
+  await ready("document.querySelectorAll('#resultado-contas [data-promover]').length===1");
+  await js("document.querySelector('#resultado-contas [data-promover]').click()");
+  await ready("[...document.querySelectorAll('#lista-admins li')].some(l=>l.textContent.includes('Membro Teste')&&l.textContent.includes('admin'))");
+  await js("document.querySelector('[data-aba=registro]').click()");
+  await ready("(()=>{const t=document.getElementById('lista-registro').textContent;return ['promoveu','publicou um aviso','desafixou'].every(x=>t.includes(x))})()");
+  console.log('Admins e registro de ações: OK');
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  await js("document.querySelector('[data-aba=visao]').click()");await sleep(400);
+  assert.equal(await js('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),true,'admin largo demais no celular');
+  const mobile=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'admin-mobile.png'),Buffer.from(mobile.data,'base64'));
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await sleep(600);
+  // Ao alargar a janela, os gráficos se reajustam ao quadro.
+  assert.equal(await js('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),true,'admin largo demais depois de alargar a janela');
+  const desktop=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'admin-desktop.png'),Buffer.from(desktop.data,'base64'));
+  // Sem sessão, /admin leva ao login e volta para /admin depois de entrar.
+  await js("fetch('/api/auth/sair',{method:'POST'})");
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/admin'});
+  await ready("location.pathname==='/inicio'&&document.getElementById('painel-entrar')!==null");
+  await js("document.getElementById('entrar-email').value='visual@example.com';document.getElementById('entrar-senha').value='SenhaTeste123!';document.getElementById('painel-entrar').requestSubmit()");
+  await ready("location.pathname==='/admin'");
+  assert.deepEqual(erros,[]);
+  console.log('Celular sem rolagem lateral, volta ao admin depois do login e nenhum erro JavaScript. Capturas: '+temp);
+}
+
 async function verificarPerfil(){
   await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   await js("localStorage.setItem('spectra:movimento','on')");
   const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg==';
   await js(`fetch('/api/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:'Pessoa Visual',bio:'Teste do perfil',foto:${JSON.stringify(png)}})}).then(r=>{if(!r.ok)throw Error('Perfil falhou')})`);
-  async function origem(comFoto=true){
-    await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
-    await ready("location.pathname==='/painel/explorar'&&document.body.classList.contains('com-conta')&&"+(comFoto?"!!document.querySelector('.conta-avatar img')":"document.querySelector('.conta-avatar').textContent==='P'"));
-  }
-  async function abrir(){
-    await js("document.querySelector('[data-perfil-acesso]').click()");
-    await ready("document.documentElement.dataset.perfilTransicao==='aguardando'");
-    assert.equal(await js("document.querySelector('[data-perfil-cofre]').open"),true);
-    assert.equal(await js("location.pathname"),'/painel/explorar');
-  }
-  const captura=async nome=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,nome+'.png'),Buffer.from(shot.data,'base64'));};
-  for(const pagina of ['/painel','/painel/visao-geral','/painel/historico','/painel/explorar','/painel/blog','/painel/forum','/painel/aprender','/privacidade','/termos']){
+  for(const pagina of ['/painel','/painel/visao-geral','/painel/historico','/painel/explorar','/painel/blog','/painel/aprender','/privacidade','/termos']){
     await command('Page.navigate',{url:'http://127.0.0.1:8012'+pagina});
-    await ready(`location.pathname===${JSON.stringify(pagina)}&&document.body.classList.contains('com-conta')`);
-    assert.equal(await js("document.querySelectorAll('[data-perfil-cofre]').length"),1,pagina);
-    assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true,pagina);
+    await ready(`location.pathname===${JSON.stringify(pagina)}&&document.body.classList.contains('com-conta')&&!!document.querySelector('.conta-avatar img')`);
+    assert.equal(await js("document.querySelectorAll('.trilho [href=\"/painel/perfil\"]').length"),0);
+    assert.equal(await js("document.querySelectorAll('.gaveta-menu [data-menu=perfil]').length"),0);
+    assert.equal(await js("(()=>{const r=document.querySelector('.canto-superior').getBoundingClientRect();return r.top>=0&&r.top<20&&document.documentElement.clientWidth-r.right<25})()"),true,pagina);
+    assert.equal(await js("getComputedStyle(document.querySelector('.conta-avatar')).borderRadius"),'0px');
+    assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);
   }
-  await origem();
-  const avatarOrigem=await js("(()=>{const r=document.querySelector('.conta-avatar').getBoundingClientRect();return {x:r.left,y:r.top,width:r.width}})()");
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});await ready("location.pathname==='/painel/explorar'&&document.body.classList.contains('com-conta')");
+  const origem=await js("(()=>{const r=document.querySelector('.conta-avatar').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()");
+  assert.ok(origem.x>1000);
+  await command('Performance.enable');
+  await command('Emulation.setCPUThrottlingRate',{rate:4});
   await js("document.querySelector('[data-perfil-acesso]').click()");
-  await ready("document.documentElement.dataset.perfilTransicao==='abertura'");
-  await js("document.getAnimations().filter(a=>a.effect.target?.closest?.('[data-perfil-cofre],.perfil-cofre-voo')).forEach(a=>{a.pause();a.currentTime=0})");
-  const avatarVoo=await js("(()=>{const r=document.querySelector('.perfil-cofre-voo').getBoundingClientRect();return {x:r.left,y:r.top,width:r.width}})()");
-  assert.ok(Math.abs(avatarOrigem.x-avatarVoo.x)<1&&Math.abs(avatarOrigem.y-avatarVoo.y)<1&&Math.abs(avatarOrigem.width-avatarVoo.width)<1,'A foto deve iniciar no botao real.');
-  await js("document.getAnimations().filter(a=>a.effect.target?.closest?.('[data-perfil-cofre],.perfil-cofre-voo')).forEach(a=>a.currentTime=470)");
-  assert.equal(await js("document.querySelector('[data-cofre-foto] img').src"),png);
-  await captura('cofre-01-foto');
-  await js("document.getAnimations().filter(a=>a.effect.target?.closest?.('[data-perfil-cofre],.perfil-cofre-voo')).forEach(a=>a.play())");
-  await ready("document.documentElement.dataset.perfilTransicao==='aguardando'");
-  await captura('cofre-02-cadeado');
-  assert.equal(await js("document.querySelector('[data-cofre-pular],.perfil-cofre-cabecalho')===null"),true);
-  assert.equal(await js("(()=>{const d=document.querySelector('[data-perfil-cofre]').getBoundingClientRect(),s=document.querySelector('.trilho').getBoundingClientRect();return d.left>=s.right&&!!document.elementFromPoint(s.left+20,s.top+180)?.closest('.trilho')})()"),true,'A barra lateral deve permanecer visivel e acessivel.');
-  assert.equal(await js("(()=>{const a=document.querySelector('.perfil-cofre-palco').getBoundingClientRect(),b=document.querySelector('.perfil-cofre-instrucoes').getBoundingClientRect();return b.top-a.bottom>=8&&b.top-a.bottom<=24})()"),true);
-  assert.equal(await js("getComputedStyle(document.querySelector('[data-perfil-cofre]')).backgroundColor===getComputedStyle(document.body).backgroundColor"),true);
-  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
-  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
-  await ready("!document.querySelector('[data-perfil-cofre]').open&&!document.documentElement.dataset.perfilTransicao");
-  assert.equal(await js("document.activeElement===document.querySelector('[data-perfil-acesso]')"),true);
-  await abrir();
-  const pontos=await js("(()=>{const a=document.querySelector('[data-cofre-chave]').getBoundingClientRect(),b=document.querySelector('[data-cofre-fechadura]').getBoundingClientRect();return {x:a.left+a.width*.75,y:a.top+a.height/2,alvoX:b.left+b.width/2,alvoY:b.top+b.height/2}})()");
-  await command('Input.dispatchMouseEvent',{type:'mousePressed',x:pontos.x,y:pontos.y,button:'left',clickCount:1});
-  await command('Input.dispatchMouseEvent',{type:'mouseMoved',x:40,y:350,button:'left',buttons:1});
-  await command('Input.dispatchMouseEvent',{type:'mouseReleased',x:40,y:350,button:'left',clickCount:1});
-  assert.equal(await js("document.documentElement.dataset.perfilTransicao"),'aguardando');
-  await command('Input.dispatchMouseEvent',{type:'mousePressed',x:pontos.x,y:pontos.y,button:'left',clickCount:1});
-  for(let i=1;i<=8;i++)await command('Input.dispatchMouseEvent',{type:'mouseMoved',x:pontos.x+(pontos.alvoX-pontos.x)*i/8,y:pontos.y+(pontos.alvoY-pontos.y)*i/8,button:'left',buttons:1});
-  await command('Input.dispatchMouseEvent',{type:'mouseReleased',x:pontos.alvoX,y:pontos.alvoY,button:'left',clickCount:1});
-  await ready("document.documentElement.dataset.perfilTransicao==='fragmentando'");
-  await js("document.querySelector('[data-perfil-cofre]').getAnimations({subtree:true}).forEach(a=>{a.pause();a.currentTime=200})");
-  await captura('cofre-03-fragmentos');
-  await js("document.querySelector('[data-perfil-cofre]').getAnimations({subtree:true}).forEach(a=>a.play())");
-  await ready("location.pathname==='/painel/perfil'&&!document.documentElement.classList.contains('perfil-cofre-chegando')&&!document.getElementById('perfil').hidden");
-  assert.equal(await js("document.getElementById('nome').value"),'Pessoa Visual');
-  assert.equal(await js("sessionStorage.getItem('spectra:perfil-cofre')"),null);
-  await captura('cofre-04-perfil');
-  // Teclado: a chave e o cadeado são botões reais e não exigem arrasto.
-  await origem();await abrir();
-  assert.equal(await js("document.activeElement===document.querySelector('[data-cofre-chave]')"),true);
-  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
-  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
-  assert.equal(await js("document.querySelector('[data-cofre-chave]').getAttribute('aria-pressed')"),'true');
-  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,modifiers:8});
-  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,modifiers:8});
-  assert.equal(await js("document.activeElement===document.querySelector('[data-cofre-cadeado]')"),true);
-  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
-  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
-  await ready("location.pathname==='/painel/perfil'&&!document.documentElement.dataset.perfilTransicao");
+  assert.equal(await js("document.documentElement.dataset.perfilTransicao"),'arredondando');
+  await ready("location.pathname==='/painel/perfil'&&document.documentElement.dataset.perfilTransicao==='deslocando'");
+  await ready("(()=>{const animacoes=document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-'));if(!animacoes.length)return false;animacoes.forEach(a=>{a.pause();a.currentTime=350});return true})()");
+  const metricsAntes=await command('Performance.getMetrics');
+  assert.equal(await js("document.documentElement.classList.contains('perfil-transicao-nativa')"),true);
+  assert.equal(await js("getComputedStyle(document.documentElement,'::view-transition-old(root)').animationName"),'perfil-tela-sair');
+  assert.equal(await js("getComputedStyle(document.documentElement,'::view-transition-new(root)').animationName"),'perfil-tela-entrar');
+  assert.equal(await js("getComputedStyle(document.documentElement,'::view-transition-group(perfil-foto)').animationDuration"),'1.25s');
+  assert.equal(await js("document.getAnimations().filter(a=>a.effect.pseudoElement==='::view-transition-group(perfil-foto)').every(a=>a.effect.getKeyframes().every(f=>f.transform&&!('width' in f)&&!('height' in f)))"),true);
+  assert.equal(await js("getComputedStyle(document.documentElement,'::view-transition-old(root)').opacity"),'1');
+  assert.equal(await js("getComputedStyle(document.documentElement,'::view-transition-new(root)').opacity"),'0');
+  assert.ok(Math.abs(await js("parseFloat(document.documentElement.style.getPropertyValue('--perfil-origem-x'))")-origem.x)<2);
+  const transicao=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-transicao.png'),Buffer.from(transicao.data,'base64'));
+  await js("document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-')).forEach(a=>a.currentTime=1050)");
+  const chegada=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-chegada.png'),Buffer.from(chegada.data,'base64'));
+  await js("document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-')).forEach(a=>a.play())");
+  await ready("!document.documentElement.dataset.perfilTransicao&&!document.getElementById('perfil').hidden&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("getComputedStyle(document.body).visibility"),'visible');
+  assert.equal(await js("document.querySelectorAll('.perfil-morph').length"),0);
+  const metricsDepois=await command('Performance.getMetrics');
+  const layouts=metricsDepois.metrics.find(m=>m.name==='LayoutCount').value-metricsAntes.metrics.find(m=>m.name==='LayoutCount').value;
+  assert.ok(layouts<12,'Layouts durante o movimento: '+layouts);
+  await command('Emulation.setCPUThrottlingRate',{rate:1});
+  console.log('Tela anterior preservada; perfil e fundo revelados juntos na chegada. CPU 4x; layouts: '+layouts);
+  assert.equal(await js("getComputedStyle(document.querySelector('[data-perfil-acesso]')).display"),'none');
+  assert.equal(await js("getComputedStyle(document.getElementById('foto-preview')).visibility"),'visible');
+  assert.equal(await js("document.getAnimations().some(a=>a.effect?.getKeyframes().some(f=>f.clipPath))"),false);
+  const desktop=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-desktop.png'),Buffer.from(desktop.data,'base64'));
+  console.log('Conta no alto a direita em nove paginas; quadrado vira circulo e se desloca ate o avatar grande: OK');
+  // O caso da gravação: inicial no lugar da foto, com tema escuro.
+  await js("fetch('/api/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:'Pessoa Visual',bio:'Teste do perfil',foto:''})}).then(r=>{if(!r.ok)throw Error('Perfil falhou')});localStorage.setItem('spectra:tema','escuro')");
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
+  await ready("location.pathname==='/painel/explorar'&&document.body.classList.contains('com-conta')&&document.querySelector('.conta-avatar').textContent==='P'");
+  await js("document.querySelector('[data-perfil-acesso]').click()");
+  await ready("(()=>{if(location.pathname!=='/painel/perfil')return false;const a=document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-'));if(!a.length)return false;a.forEach(a=>{a.pause();a.currentTime=350});return true})()");
+  const inicialVoo=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-inicial-transicao.png'),Buffer.from(inicialVoo.data,'base64'));
+  assert.equal(await js("document.getAnimations().some(a=>a.effect.pseudoElement==='::view-transition-group(perfil-letra)'&&a.effect.getKeyframes().every(f=>f.transform&&!('width' in f)&&!('height' in f)))"),true);
+  assert.equal(await js("getComputedStyle(document.querySelector('.perfil-morph')).backgroundColor===getComputedStyle(document.getElementById('foto-inicial')).backgroundColor"),true);
+  await js("document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-')).forEach(a=>a.currentTime=1050)");
+  const inicialChegada=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-inicial-chegada.png'),Buffer.from(inicialChegada.data,'base64'));
+  await js("document.getAnimations().filter(a=>a.effect.pseudoElement?.startsWith('::view-transition-')).forEach(a=>a.play())");
+  await ready("!document.documentElement.dataset.perfilTransicao&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("document.getElementById('foto-inicial').textContent"),'P');
+  assert.equal(await js("getComputedStyle(document.getElementById('foto-inicial')).visibility"),'visible');
+  console.log('Inicial sem foto no tema escuro: trajeto e chegada capturados; sem troca brusca de cor no encaixe.');
+  // O botão também deve animar quando a própria página de perfil já está aberta.
+  await js("document.querySelector('[data-perfil-acesso]').click()");
+  assert.equal(await js("document.documentElement.dataset.perfilTransicao"),'arredondando');
+  await ready("document.documentElement.dataset.perfilTransicao==='deslocando'");
+  await ready("!document.documentElement.dataset.perfilTransicao&&document.body.classList.contains('com-conta')");
+  // Uma escolha explícita de movimento ligado prevalece sobre o sistema.
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
+  await ready("location.pathname==='/painel/explorar'&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("document.documentElement.dataset.movimento"),'on');
+  await js("document.querySelector('[data-perfil-acesso]').click()");
+  assert.equal(await js("document.documentElement.dataset.perfilTransicao"),'arredondando');
+  await ready("location.pathname==='/painel/perfil'&&document.documentElement.dataset.perfilTransicao==='deslocando'");
+  await ready("!document.documentElement.dataset.perfilTransicao&&document.body.classList.contains('com-conta')");
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  console.log('Repeticao no perfil e escolha explicita de movimento ligado com sistema em reduce: OK');
   await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
-  await command('Emulation.setTouchEmulationEnabled',{enabled:true});
-  await js("localStorage.setItem('spectra:tema','claro')");
-  await origem();await abrir();await captura('cofre-05-celular-claro');
-  assert.equal(await js("(()=>{const b=document.querySelector('.barra-abas').getBoundingClientRect(),d=document.querySelector('[data-perfil-cofre]').getBoundingClientRect();return d.bottom<=b.top&&!!document.elementFromPoint(b.left+20,b.top+20)?.closest('.barra-abas')})()"),true);
-  const toque=await js("(()=>{const a=document.querySelector('[data-cofre-chave]').getBoundingClientRect(),b=document.querySelector('[data-cofre-fechadura]').getBoundingClientRect();return {x:a.left+a.width*.75,y:a.top+a.height/2,alvoX:b.left+b.width/2,alvoY:b.top+b.height/2}})()");
-  await command('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:toque.x,y:toque.y}]});
-  await command('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:toque.alvoX,y:toque.alvoY}]});
-  await command('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await ready("location.pathname==='/painel/perfil'&&!document.documentElement.dataset.perfilTransicao");
-  await js("fetch('/api/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:'Pessoa Visual',bio:'Teste sem foto',foto:''})}).then(r=>{if(!r.ok)throw Error('Perfil sem foto falhou')})");
-  await origem(false);await abrir();
-  assert.equal(await js("document.querySelector('[data-cofre-foto]').textContent"),'P');
-  await js("document.querySelector('[data-cofre-cancelar]').click()");
-  await ready("location.pathname==='/painel/explorar'&&!document.documentElement.dataset.perfilTransicao");
-  await abrir();
-  await js("document.querySelector('.barra-abas a[href=\"/painel/historico\"]').click()");
-  await ready("location.pathname==='/painel/historico'&&!document.documentElement.dataset.perfilTransicao");
-  // Preferência reduzida: acesso direto e sem cena bloqueando a página.
-  await origem(false);
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});await ready("document.body.classList.contains('com-conta')&&document.querySelector('[data-explorar=feed][aria-current=page]')");
+  assert.equal(await js("document.getElementById('explorar-nav').getBoundingClientRect().top>=document.querySelector('.conta-superior').getBoundingClientRect().bottom"),true);
+  assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);
+  const mobile=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-mobile.png'),Buffer.from(mobile.data,'base64'));
+  // Sem transição entre documentos na origem, o recorte local continua funcionando.
+  await js("const estilo=document.createElement('style');estilo.textContent='@view-transition { navigation: none; }';document.head.append(estilo);document.querySelector('[data-perfil-acesso]').click()");
+  await ready("location.pathname==='/painel/perfil'&&document.documentElement.dataset.perfilTransicao==='deslocando'");
+  await ready("!document.documentElement.dataset.perfilTransicao&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("getComputedStyle(document.body).visibility"),'visible');
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});await ready("location.pathname==='/painel/explorar'&&document.body.classList.contains('com-conta')");
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await js("localStorage.setItem('spectra:movimento','off');document.documentElement.dataset.movimento='off';document.querySelector('[data-perfil-acesso]').click()");
-  await ready("location.pathname==='/painel/perfil'&&!document.getElementById('perfil').hidden");
-  assert.equal(await js("document.querySelector('[data-perfil-cofre]').open"),false);
-  assert.equal(await js("document.documentElement.dataset.perfilTransicao||null"),null);
-  await js("localStorage.setItem('spectra:movimento','on');localStorage.setItem('spectra:tema','escuro')");
-  await command('Emulation.setTouchEmulationEnabled',{enabled:false});
-  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  await ready("location.pathname==='/painel/perfil'&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("!!document.querySelector('.perfil-morph')||!!document.documentElement.dataset.perfilTransicao"),false);
+  await ready("document.querySelector('[data-ativar-transicao]')!==null");
+  await js("document.querySelector('[data-ativar-transicao]').click()");
+  assert.equal(await js("document.documentElement.dataset.perfilTransicao"),'arredondando');
+  await ready("document.documentElement.dataset.perfilTransicao==='deslocando'");
+  await ready("!document.documentElement.dataset.perfilTransicao&&document.body.classList.contains('com-conta')");
+  assert.equal(await js("document.documentElement.dataset.movimento"),'on');
   assert.deepEqual(erros,[]);
-  console.log('Perfil: voo desde o botao, barra lateral acessivel, espacamento, arrasto, teclado, toque, cancelar, navegacao e movimento reduzido: OK. Capturas: '+temp);
+  console.log('Celular sem sobreposicao, fallback, movimento reduzido e foto da conta: OK. Capturas: '+temp);
 }
 
 (async()=>{
@@ -349,6 +467,8 @@ async function verificarPerfil(){
   if(process.argv.includes('--perfil')){await verificarPerfil();return;}
   if(process.argv.includes('--logos')){await verificarLogos();return;}
   if(process.argv.includes('--inicio')){await verificarInicio();return;}
+  if(process.argv.includes('--admin')){await verificarAdmin();return;}
+  if(process.argv.includes('--configuracoes')){await verificarConfiguracoes();return;}
   await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
   await ready("document.querySelector('[data-explorar=feed][aria-current=page]')!==null");
   assert.equal(await js("document.getElementById('form-publicacao').hidden"),true);
@@ -356,7 +476,8 @@ async function verificarPerfil(){
   assert.equal(await js("Math.abs(document.getElementById('explorar-nav').getBoundingClientRect().top)<2"),true);
   assert.equal(await js("Math.abs(document.getElementById('explorar-nav').getBoundingClientRect().width-document.querySelector('.corpo').getBoundingClientRect().width)<2"),true);
   await js("document.querySelector('[data-explorar=publicar]').click()");await ready("!document.getElementById('form-publicacao').hidden");
-  await js("document.getElementById('post-titulo').value='Imagem de teste';document.getElementById('post-texto').value='Discussao sobre seguranca digital com uma foto de teste.'");
+  // Título com um link longo e sem espaços: não pode alargar a página no celular.
+  await js("document.getElementById('post-titulo').value='Imagem de teste https://exemplo.com/?token='+'a1B2c3D4e5'.repeat(13);document.getElementById('post-texto').value='Discussao sobre seguranca digital com uma foto de teste.'");
   const png=path.join(temp,'teste.png');fs.writeFileSync(png,Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg==','base64'));
   const dom=await command('DOM.getDocument');const field=await command('DOM.querySelector',{nodeId:dom.root.nodeId,selector:'#post-midias'});
   await command('DOM.setFileInputFiles',{nodeId:field.nodeId,files:[png]});await ready("document.querySelectorAll('.midia-previa').length===1");
@@ -364,11 +485,70 @@ async function verificarPerfil(){
   await ready("location.hash==='#feed'&&document.querySelectorAll('#lista-publicacoes .post-midias img').length===1");
   const imagem=await js("document.querySelector('#lista-publicacoes .post-midias img').src");assert.ok(imagem.includes('/api/midias/'));
   console.log('Feed padrao, publicacao com foto e navbar: OK');
+  // Outra pessoa (fora do navegador) vira master, publica um aviso, curte e comenta.
+  const base='http://127.0.0.1:8012';
+  const apiNode=async(cookie,url,method='GET',corpo)=>fetch(base+url,{method,headers:{Origin:base,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:corpo?JSON.stringify(corpo):undefined});
+  const cadastro=await apiNode(null,'/api/auth/cadastrar','POST',{nome:'Leitora Teste',email:'leitora@example.com',senha:'SenhaTeste123!'});
+  assert.equal(cadastro.status,201);const cookie=cadastro.headers.get('set-cookie').split(';')[0];
+  require('node:child_process').execFileSync(path.join(root,'.venv/Scripts/python.exe'),['-m','spectra_link_guard.admin','master','leitora@example.com'],{cwd:root,env:{...process.env,SPECTRA_BD:path.join(temp,'teste.db')}});
+  assert.equal((await apiNode(cookie,'/api/comunidade/aviso','POST',{titulo:'Manutenção no sábado',texto:'O site fica fora do ar das 22h às 23h.'})).status,201);
+  const postVisual=(await (await apiNode(cookie,'/api/comunidade/explorar')).json()).find(p=>p.titulo.startsWith('Imagem de teste'));
+  assert.equal((await apiNode(cookie,`/api/publicacoes/${postVisual.id}/curtida`,'POST')).status,200);
+  assert.equal((await apiNode(cookie,`/api/publicacoes/${postVisual.id}/respostas`,'POST',{texto:'Ótima dica, obrigada!'})).status,201);
+  assert.equal((await apiNode(cookie,`/api/usuarios/${postVisual.autor}/seguir`,'POST')).status,200);
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
+  await ready("document.querySelector('[data-explorar=feed][aria-current=page]')!==null&&document.querySelectorAll('#lista-publicacoes [data-curtir]').length===2");
+  await ready("(document.querySelector('[data-aviso-fixado]')?.textContent||'').includes('Manutenção no sábado')");
+  assert.equal(await js("document.querySelector('[data-admin-link]').hidden"),true);
+  assert.equal(await js("[...document.querySelectorAll('#lista-publicacoes article')].some(a=>a.textContent.includes('Manutenção no sábado')&&a.querySelector('.selo-admin'))"),true);
+  await ready("document.querySelector('[data-sino-contador]').textContent==='2'&&!document.querySelector('[data-sino-contador]').hidden");
+  await js("document.querySelector('[data-sino]').click()");
+  await ready("!document.querySelector('[data-sino-lista]').hidden&&document.querySelectorAll('[data-sino-lista] li').length===2");
+  const textoSino=await js("document.querySelector('[data-sino-lista]').textContent");
+  assert.ok(textoSino.includes('Leitora Teste curtiu')&&textoSino.includes('comentou'),textoSino);
+  await ready("document.querySelector('[data-sino-contador]').hidden");
+  await js("document.querySelector('[data-sino]').click()");assert.equal(await js("document.querySelector('[data-sino-lista]').hidden"),true);
+  const curtir="[...document.querySelectorAll('#lista-publicacoes article')].find(a=>a.textContent.includes('Imagem de teste')).querySelector('[data-curtir]')";
+  assert.equal(await js(curtir+".textContent.trim()"),'♥ 1');
+  await js(curtir+".click()");await ready(curtir+".getAttribute('aria-pressed')==='true'&&"+curtir+".textContent.trim()==='♥ 2'");
+  await js(curtir+".click()");await ready(curtir+".getAttribute('aria-pressed')==='false'&&"+curtir+".textContent.trim()==='♥ 1'");
+  // A faixa do aviso aparece no topo do painel, visível sem rolar.
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel'});
+  await ready("(()=>{const f=document.querySelector('[data-aviso-fixado]');if(!f)return false;const r=f.getBoundingClientRect();return r.height>0&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(f).visibility==='visible'})()");
+  assert.ok(await js("document.querySelector('[data-aviso-fixado]').getBoundingClientRect().width>=0.9*document.querySelector('main').getBoundingClientRect().width"),'faixa do aviso espremida');
+  const faixa=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'aviso-painel.png'),Buffer.from(faixa.data,'base64'));
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
+  await ready("document.querySelector('[data-explorar=feed][aria-current=page]')!==null&&document.querySelectorAll('#lista-publicacoes [data-curtir]').length===2");
+  console.log('Curtir, sininho com curtida e comentário, aviso fixado e selo de admin: OK');
   await js("document.querySelector('[data-explorar=conexoes]').click()");await ready("!document.getElementById('explorar-conexoes').hidden&&document.getElementById('total-seguindo').textContent==='(0)'");
+  // Conversar virou ícone; o gráfico de alcance aparece para qualquer membro.
+  await ready("document.querySelectorAll('#lista-seguidores [data-conversar]').length===1");
+  assert.equal(await js("document.querySelector('#lista-seguidores [data-conversar]').textContent.trim()"),'');
+  assert.equal(await js("document.querySelector('#lista-seguidores [data-conversar]').getAttribute('aria-label')"),'Conversar com Leitora Teste');
+  assert.equal(await js("!!document.querySelector('#lista-seguidores [data-conversar] svg')"),true);
+  await ready("!!window.Chart&&!!Chart.getChart(document.getElementById('g-alcance'))");
+  assert.equal(await js("Chart.getChart(document.getElementById('g-alcance')).data.labels.length"),30);
+  assert.deepEqual(await js("['alcance-seguidores','alcance-seguindo','alcance-curtidas'].map(id=>document.getElementById(id).textContent)"),['1','0','1']);
+  const conexoesTela=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'conexoes.png'),Buffer.from(conexoesTela.data,'base64'));
+  await js("document.querySelector('#lista-seguidores [data-conversar]').click()");await ready("!document.getElementById('chat').hidden");
+  await js("document.querySelector('[data-explorar=conexoes]').click()");await ready("!document.getElementById('explorar-conexoes').hidden");
+  // Perfil de outra pessoa tem botão para voltar ao Explorar; o próprio perfil não.
+  await js("document.querySelector('#lista-seguidores .autor-perfil').click()");
+  await ready("location.pathname==='/painel/perfil'&&document.getElementById('membro-nome').textContent==='Leitora Teste'");
+  await ready("(()=>{const v=document.querySelector('[data-voltar-explorar]');if(!v||v.hidden)return false;const r=v.getBoundingClientRect();return r.width>0&&r.top>=0&&r.bottom<=innerHeight})()");
+  assert.equal(await js("document.querySelector('[data-voltar-explorar]').textContent.trim()"),'Voltar para o Explorar');
+  const membroTela=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'perfil-membro.png'),Buffer.from(membroTela.data,'base64'));
+  await js("document.querySelector('[data-voltar-explorar]').click()");
+  await ready("location.pathname==='/painel/explorar'&&document.querySelector('[data-explorar=feed][aria-current=page]')!==null");
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/perfil'});
+  await ready("location.pathname==='/painel/perfil'&&!document.getElementById('perfil').hidden");
+  assert.equal(await js("!document.querySelector('[data-voltar-explorar]')||document.querySelector('[data-voltar-explorar]').hidden"),true,'botão de voltar no próprio perfil');
+  await command('Page.navigate',{url:'http://127.0.0.1:8012/painel/explorar'});
+  await ready("document.querySelector('[data-explorar=feed][aria-current=page]')!==null");
   await js("document.querySelector('[data-explorar=conversas]').click()");await ready("!document.getElementById('chat').hidden");
   await js("document.querySelector('[data-explorar=desafios]').click()");await ready("document.querySelectorAll('.desafio-card').length===5");
   await js("document.querySelector('.desafio-card button').click()");await ready("!document.getElementById('desafio-partida').hidden&&document.querySelector('input[name=alternativa]')!==null");
-  await js("document.querySelector('input[name=alternativa][value=\"1\"]').click();document.querySelector('#desafio-partida button[type=submit]').click()");
+  await js("[...document.querySelectorAll('.desafio-alternativa')].find(l=>l.textContent.includes('aplicativo conhecido')).querySelector('input').click();document.querySelector('#desafio-partida button[type=submit]').click()");
   await ready("document.querySelector('.desafio-feedback[data-acertou=true]')!==null");
   await js("document.querySelector('#desafio-partida form>button:last-child').click()");await ready("document.querySelectorAll('.desafio-etapa').length===4");
   const antes=await js("document.querySelector('.desafio-etapa span').textContent");
@@ -377,7 +557,9 @@ async function verificarPerfil(){
   console.log('Conexoes, conversas, cinco jogos, correcao e sequencia: OK');
   const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'desktop.png'),Buffer.from(shot.data,'base64'));
   await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await sleep(300);
-  assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);
+  // clientWidth é a largura do aparelho; innerWidth cresce junto com o conteúdo no modo celular.
+  await js("document.querySelector('[data-explorar=feed]').click()");await ready("!document.getElementById('lista-publicacoes').closest('[hidden]')");
+  assert.equal(await js('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),true,'feed largo demais no celular');
   assert.equal(await js("document.getElementById('explorar-nav').getBoundingClientRect().top>=document.querySelector('.conta-superior').getBoundingClientRect().bottom"),true);
   const mobile=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(temp,'mobile.png'),Buffer.from(mobile.data,'base64'));
   assert.deepEqual(erros,[]);

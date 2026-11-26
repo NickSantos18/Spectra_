@@ -1,0 +1,375 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R] /Count 9 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2933 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Vis\343o geral do projeto) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (O que este documento apresenta) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (Invent\341rio das linguagens, bibliotecas, protocolos, integra\347\365es e ferramentas identificadas no) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (c\363digo do Spectra Link Guard. Cada tecnologia \351 relacionada ao seu uso e aos arquivos que) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (comprovam sua presen\347a.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 647 Tm (Arquitetura) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (Navegador \050HTML, CSS e JavaScript\051 > requisi\347\365es HTTP/JSON > aplica\347\343o FastAPI em Python >) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (banco SQLite e servi\347os externos. Uvicorn executa a aplica\347\343o ASGI. O analisador de links) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (tamb\351m pode ser utilizado por linha de comando.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 571 Tm (Como interpretar as vers\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (pyproject.toml define vers\365es m\355nimas e grupos opcionais. requirements-lock.txt fixa vers\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (de um ambiente validado em 24/10/2026. package.json fixa ferramentas de estilos. Essas) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (declara\347\365es n\343o comprovam a vers\343o instalada nem que um servi\347o externo esteja habilitado.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 495 Tm (Fontes utilizadas) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 476 Tm (pyproject.toml; package.json; requirements-lock.txt; tailwind.config.cjs; c\363digo em) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (src/spectra_link_guard; testes em tests; automa\347\365es em scripts. O levantamento usa o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 448 Tm (reposit\363rio local, sem consultar dados de usu\341rios ou credenciais.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 419 Tm (Mapa de leitura) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 400 Tm (P\341ginas seguintes: backend e dados; interface; seguran\347a e identidade; integra\347\365es;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 386 Tm (ferramentas e testes; depend\352ncias fixadas e m\363dulos nativos. Componentes opcionais e arquivos) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 372 Tm (legados s\343o identificados separadamente.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (1) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3393 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Backend e armazenamento) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Python 3.11 ou superior) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (Linguagem principal do servidor, do analisador de links, dos scripts e dos testes. Usa) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (tipagem, dataclasses e enums para representar an\341lises e sinais de risco. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (pyproject.toml; models.py; analisador.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 647 Tm (FastAPI, Starlette e Uvicorn) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (FastAPI cria rotas de API e p\341ginas; Starlette fornece a base ASGI, respostas e recursos HTTP.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (Uvicorn serve a aplica\347\343o. Vers\365es fixadas: FastAPI 0.162.0, Starlette 1.10.0 e Uvicorn) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (0.54.0. Fontes: web/app.py; auth/rotas.py; requirements-lock.txt.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 571 Tm (Pydantic e valida\347\343o de e-mail) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (Pydantic valida corpos de requisi\347\343o, tipos e limites por BaseModel e Field. EmailStr usa) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (email-validator. Vers\365es fixadas: Pydantic 2.14.1 e email-validator 2.3.0. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (auth/rotas.py; web/app.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 495 Tm (SQLite e SQL) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 476 Tm (Banco embarcado acessado diretamente por sqlite3. Guarda contas, sess\365es, an\341lises,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (publica\347\365es, respostas, conex\365es, m\355dias e outros registros. O c\363digo define tabelas, \355ndices,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 448 Tm (chaves e consultas SQL; imagens tamb\351m s\343o armazenadas como BLOB. Fontes: auth/bd.py;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 434 Tm (web/analises.py; web/comunidade.py; web/explorar.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 405 Tm (HTTPX e asyncio) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 386 Tm (HTTPX 0.28.1 realiza chamadas HTTP para servi\347os externos. asyncio organiza opera\347\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 372 Tm (ass\355ncronas e trabalho de rede; locks e sem\341foros limitam concorr\352ncia em pontos do servidor.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 358 Tm (Fontes: rede.py; reputacao.py; auth/google.py; web/app.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 329 Tm (Pillow) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 310 Tm (Pillow 13.0.0 l\352, valida e processa imagens enviadas \340 comunidade. Tamb\351m \351 utilizado no) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 296 Tm (gerador de documenta\347\343o de modelagem. Fontes: web/midias.py; scripts/gerar_modelagem_pdf.py.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (2) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 3637 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Interface e recursos do navegador) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (HTML, CSS e JavaScript) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (P\341ginas HTML com JavaScript nativo e estilos CSS. O servidor monta parciais e injeta ativos; a) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (interface usa DOM, eventos, Fetch e JSON. CSS inclui vari\341veis de tema, layouts responsivos e) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (anima\347\365es. Fontes: web/static; web/parciais; web/app.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 647 Tm (Tailwind CSS e plugin de formul\341rios) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (Tailwind CSS 3.4.19 gera utilitarios.css a partir de styles/tailwind.css. @tailwindcss/forms) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (0.5.11 ajusta controles de formul\341rios. A configura\347\343o liga cores \340s vari\341veis CSS do projeto.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (Fontes: package.json; tailwind.config.cjs.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 571 Tm (Chart.js e Lucide) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (Chart.js 4.4.4 apresenta gr\341ficos no laudo e na vis\343o geral. Lucide 0.462.0 fornece \355cones) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (SVG. As p\341ginas carregam essas bibliotecas por CDN \050jsDelivr e unpkg\051. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (static/laudo.html; static/visao-geral.html; static/comunidade.html.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 495 Tm (Fontes e desenho) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 476 Tm (Google Fonts carrega Hanken Grotesk, Inter e JetBrains Mono. Canvas 2D desenha efeitos e apoia) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (a edi\347\343o de foto; SVG \351 utilizado em \355cones e elementos gr\341ficos. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 448 Tm (static/comunidade.html; static/fundo.js; static/foto-editor.js.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 419 Tm (APIs nativas e acessibilidade) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 400 Tm (localStorage e sessionStorage guardam prefer\352ncias e estados de interface.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 386 Tm (requestAnimationFrame, IntersectionObserver e ResizeObserver controlam desenho e visibilidade.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 372 Tm (matchMedia adapta movimento e tema; atributos ARIA e foco apoiam navega\347\343o acess\355vel. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 358 Tm (acessibilidade.js; movimento.js; menu.js; fundo.js.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 329 Tm (Three.js e anime.js: arquivo legado) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 310 Tm (static/cubos.js cont\351m imports de Three.js, anime.js e recursos associados. N\343o foi encontrada) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 296 Tm (refer\352ncia a cubos.js nos HTML ou no montador atual de p\341ginas. Sua presen\347a representa c\363digo) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 282 Tm (dispon\355vel no reposit\363rio, sem evid\352ncia de carregamento nas telas atuais.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (3) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 3375 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Seguran\347a e autentica\347\343o) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Argon2id e compatibilidade scrypt) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (argon2-cffi 25.1.0 gera e verifica hashes de senha Argon2id. hashlib.scrypt permanece para) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (validar hashes antigos e permitir atualiza\347\343o. Fontes: auth/seguranca.py; auth/rotas.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 661 Tm (HMAC, SHA-256, tokens e cookies) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 642 Tm (hashlib, hmac e secrets sustentam assinaturas, hashes e tokens aleat\363rios. As sess\365es usam) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (cookies e registros no SQLite. A assinatura protege a integridade do valor do cookie. Fontes:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (auth/seguranca.py; auth/fluxos.py; auth/bd.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 585 Tm (Google OAuth 2.0 e OpenID Connect) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 566 Tm (Login Google com fluxo de autoriza\347\343o e valida\347\343o de ID token pelo google-auth 2.62.0,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (incluindo o transporte Requests. \311 uma integra\347\343o configur\341vel. Fontes: auth/google.py;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (docs/CONFIGURAR-GOOGLE.md.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 509 Tm (TLS, SSL e certificados X.509) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 490 Tm (ssl e socket fazem conex\365es e inspe\347\343o de certificados. cryptography 50.0.2 \351 opcional para) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 476 Tm (leitura X.509, inclusive em situa\347\365es em que a cadeia n\343o valida. Fontes: tls.py; saida.py;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (pyproject.toml.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 433 Tm (Prote\347\365es da aplica\347\343o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 414 Tm (C\363digo pr\363prio implementa verifica\347\365es de origem, pol\355ticas HTTP/CSP com nonce, controle de) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 400 Tm (acesso por papel e limites de requisi\347\365es e concorr\352ncia. N\343o s\343o produtos externos separados.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 386 Tm (Fontes: web/protecao.py; auth/protecao.py; auth/papeis.py; web/app.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 357 Tm (URLs, dom\355nios e sa\355da de rede) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 338 Tm (urllib.parse, ipaddress, socket, re e unicodedata apoiam normaliza\347\343o, resolu\347\343o e valida\347\343o.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 324 Tm (tldextract 5.4.0 \351 opcional e utiliza a Public Suffix List; h\341 alternativa embutida. O m\363dulo) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 310 Tm (saida.py valida destinos p\372blicos. Fontes: sintaxe.py; saida.py.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (4) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 3572 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Integra\347\365es e comunica\347\343o) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Google Safe Browsing, VirusTotal e PhishTank) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (Consultas de reputa\347\343o de URLs implementadas em reputacao.py. O c\363digo cont\351m os endpoints) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (Safe Browsing v4, VirusTotal v3 e PhishTank. O uso depende da configura\347\343o e das credenciais) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (aplic\341veis; sua exist\352ncia no c\363digo n\343o comprova ativa\347\343o.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 647 Tm (RDAP e DNS sobre HTTPS) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (rede.py consulta rdap.org para dados de dom\355nio e IP e cloudflare-dns.com/dns-query para) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (resolu\347\343o DNS via HTTPS. A an\341lise tamb\351m utiliza resolu\347\343o de rede por socket. Protocolos:) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (RDAP, DNS, HTTPS e TLS.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 571 Tm (Anthropic / Claude: opcional) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (O grupo ia declara anthropic>=1.12. web/assistente.py integra respostas em streaming para os) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (assistentes do site. O identificador padr\343o configurado no c\363digo \351 claude-opus-5,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (substitu\355vel por vari\341vel de ambiente; n\343o foi verificada disponibilidade externa. A) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 510 Tm (biblioteca n\343o consta no requirements-lock.txt atual.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 481 Tm (Streaming HTTP e consultas peri\363dicas) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (StreamingResponse entrega a resposta do assistente progressivamente. As conversas da) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 448 Tm (comunidade atualizam mensagens por consultas peri\363dicas do navegador. A depend\352ncia websockets) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 434 Tm (do ambiente n\343o significa que o chat utilize WebSocket. Fontes: web/app.py;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 420 Tm (static/comunidade.js.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 391 Tm (SMTP e e-mail) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 372 Tm (smtplib, email.message e ssl permitem enviar mensagens relacionadas \340 conta, conforme) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 358 Tm (configura\347\343o SMTP. Fontes: auth/correio.py; auth/fluxos.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 329 Tm (Formatos usados) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 310 Tm (JSON nas APIs; HTML/CSS/JS na interface; SQL e BLOB no banco; formatos de imagem tratados pelo) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 296 Tm (Pillow; TOML na configura\347\343o Python; JSON no package.json; YAML nos arquivos pnpm; PDF na) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 282 Tm (documenta\347\343o. Vari\341veis de ambiente configuram servi\347os e segredos.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (5) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 3559 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Desenvolvimento, testes e automa\347\343o) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (pytest e TestClient) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (pytest 9.1.1 executa testes Python. FastAPI/Starlette TestClient exercita rotas e sess\365es, e) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (testes usam monkeypatch e ambientes isolados. Fontes: tests/test_auth.py;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (tests/test_comunidade.py; tests/test_explorar.py; tests/conftest.py.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 647 Tm (Node.js e testes JavaScript) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 628 Tm (Node.js executa ferramentas de estilos e scripts .cjs. node:test e node:assert verificam) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (JavaScript; node:vm ajuda a simular o ambiente de execu\347\343o. Fontes: tests/fundo.test.cjs;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (tests/foto_editor.test.cjs.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 571 Tm (Microsoft Edge headless e CDP) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 552 Tm (scripts/verificar_explorar.cjs abre Edge sem interface e controla o navegador pelo Chrome) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (DevTools Protocol usando WebSocket. Verifica p\341ginas, intera\347\365es e adapta\347\343o ao celular com) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (banco e perfil isolados. WebSocket aqui pertence \340 automa\347\343o de testes.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 495 Tm (setuptools, pip, npm e pnpm) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 476 Tm (setuptools>=68 \351 o backend de build Python. pyproject.toml define pacote, extras e comando) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 462 Tm (spectra-link-guard. requirements-lock.txt registra depend\352ncias fixadas. package.json define) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 448 Tm (build:css; pnpm-lock.yaml e pnpm-workspace.yaml registram configura\347\343o do ecossistema Node.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 419 Tm (Git, GitHub e PowerShell) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 400 Tm (O script scripts/sincronizar.ps1 usa Git para criar commits e enviar altera\347\365es ao GitHub;) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 386 Tm (seus coment\341rios descrevem execu\347\343o por tarefa agendada do Windows. A exist\352ncia do script n\343o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 372 Tm (confirma que a tarefa esteja ativa.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 343 Tm (CLI e documenta\347\343o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 324 Tm (argparse organiza o comando de an\341lise por terminal; json serializa resultados.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 310 Tm (scripts/gerar_modelagem_pdf.py usa AST, SQLite em mem\363ria e Pillow para documentar o banco.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 296 Tm (Este invent\341rio \351 gerado por scripts/gerar_tecnologias_pdf.py em PDF vetorial com texto) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 282 Tm (selecion\341vel.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (6) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 3054 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Ap\352ndice: vers\365es fixadas) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Invent\341rio do requirements-lock.txt) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (Lista literal de depend\352ncias diretas e transitivas do ambiente registrado. Bibliotecas de) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (suporte n\343o representam funcionalidades independentes implementadas pelo projeto.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 661 Tm (Pacotes e vers\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 642 Tm (annotated-doc==0.0.5) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 625 Tm (annotated-types==0.8.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 608 Tm (anyio==4.15.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 591 Tm (argon2-cffi==25.1.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 574 Tm (argon2-cffi-bindings==26.1.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 557 Tm (certifi==2026.10.23) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 540 Tm (cffi==2.1.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 523 Tm (charset-normalizer==3.5.2) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 506 Tm (click==8.5.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 489 Tm (colorama==0.4.6) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 472 Tm (cryptography==50.0.2) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 455 Tm (dnspython==2.9.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 438 Tm (email-validator==2.3.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 421 Tm (fastapi==0.162.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 404 Tm (filelock==4.2.4) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 387 Tm (google-auth==2.62.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 370 Tm (h11==0.16.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 353 Tm (httpcore==1.0.9) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 336 Tm (httptools==0.9.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 319 Tm (httpx==0.28.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 302 Tm (idna==3.20) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 285 Tm (iniconfig==2.3.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 268 Tm (opentelemetry-api==1.45.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 251 Tm (packaging==26.3) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 222 Tm (Interpreta\347\343o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 203 Tm (O invent\341rio acima descreve o arquivo de vers\365es do reposit\363rio. O grupo opcional de IA e as) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 189 Tm (depend\352ncias de frontend foram descritos nas p\341ginas anteriores.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (7) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 2823 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Ap\352ndice: vers\365es fixadas) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Invent\341rio do requirements-lock.txt) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (Lista literal de depend\352ncias diretas e transitivas do ambiente registrado. Bibliotecas de) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (suporte n\343o representam funcionalidades independentes implementadas pelo projeto.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 661 Tm (Pacotes e vers\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 642 Tm (pillow==13.0.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 625 Tm (pluggy==1.7.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 608 Tm (pyasn1==0.6.4) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 591 Tm (pyasn1_modules==0.4.2) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 574 Tm (pycparser==3.12) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 557 Tm (pydantic==2.14.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 540 Tm (pydantic_core==2.50.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 523 Tm (Pygments==2.21.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 506 Tm (pytest==9.1.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 489 Tm (python-dotenv==1.2.4) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 472 Tm (PyYAML==6.0.3) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 455 Tm (requests==2.34.2) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 438 Tm (requests-file==3.0.1) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 421 Tm (starlette==1.10.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 404 Tm (tldextract==5.4.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 387 Tm (typing-inspection==0.4.4) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 370 Tm (typing_extensions==4.16.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 353 Tm (urllib3==2.8.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 336 Tm (uvicorn==0.54.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 319 Tm (watchfiles==1.3.0) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 302 Tm (websockets==17.3) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 273 Tm (Interpreta\347\343o) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 254 Tm (O invent\341rio acima descreve o arquivo de vers\365es do reposit\363rio. O grupo opcional de IA e as) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 240 Tm (depend\352ncias de frontend foram descritos nas p\341ginas anteriores.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (8) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 2143 >>
+stream
+BT /F2 10 Tf 0.02 0.44 0.48 rg 1 0 0 1 44 802 Tm (SPECTRA  /  INVENT\301RIO DE TECNOLOGIAS) Tj ET
+BT /F2 22 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 764 Tm (Ap\352ndice: m\363dulos nativos Python) Tj ET
+0.7 0.8 0.83 RG 44 748 m 551 748 l S
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 723 Tm (Levantamento autom\341tico dos imports) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 704 Tm (argparse, asyncio, base64, binascii, collections, contextlib, contextvars, dataclasses,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 690 Tm (datetime, email, enum, hashlib, hmac, io, ipaddress, json, logging, os, pathlib, random, re,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 676 Tm (secrets, smtplib, socket, sqlite3, ssl, struct, sys, threading, time, typing, unicodedata,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 662 Tm (urllib, uuid, warnings.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 633 Tm (Organiza\347\343o por finalidade) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 614 Tm (Rede e protocolos: asyncio, socket, ssl e urllib. Seguran\347a e representa\347\343o: hashlib, hmac,) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 600 Tm (secrets, base64 e binascii. Persist\352ncia: sqlite3. Conta e e-mail: smtplib e email.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 586 Tm (Estruturas, execu\347\343o e utilit\341rios: os demais m\363dulos listados acima.) Tj ET
+BT /F2 12 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 557 Tm (Limites do levantamento) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 538 Tm (Foram considerados c\363digo-fonte, depend\352ncias declaradas, ativos de interface e automa\347\365es) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 524 Tm (presentes no workspace. Depend\352ncias transitivas est\343o reproduzidas no ap\352ndice de vers\365es.) Tj ET
+BT /F1 10 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 510 Tm (N\343o foi verificado o estado de produ\347\343o, de contas externas nem a instala\347\343o de cada pacote.) Tj ET
+BT /F1 8 Tf 0.10 0.18 0.25 rg 1 0 0 1 44 30 Tm (C\363digo local analisado em 29/10/2026 | Vers\365es conforme arquivos do projeto) Tj ET
+BT /F1 9 Tf 0.10 0.18 0.25 rg 1 0 0 1 518 30 Tm (9) Tj ET
+endstream
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000175 00000 n 
+0000000272 00000 n 
+0000000374 00000 n 
+0000000510 00000 n 
+0000003495 00000 n 
+0000003631 00000 n 
+0000007076 00000 n 
+0000007213 00000 n 
+0000010903 00000 n 
+0000011041 00000 n 
+0000014469 00000 n 
+0000014607 00000 n 
+0000018232 00000 n 
+0000018370 00000 n 
+0000021982 00000 n 
+0000022120 00000 n 
+0000025227 00000 n 
+0000025365 00000 n 
+0000028241 00000 n 
+0000028379 00000 n 
+trailer
+<< /Size 23 /Root 1 0 R >>
+startxref
+30575
+%%EOF

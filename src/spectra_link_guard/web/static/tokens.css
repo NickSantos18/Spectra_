@@ -30,6 +30,7 @@
   --terciaria: #FFFC0E;       --terciaria-rgb: 255 252 14;
   --perigo: #FF4438;          --perigo-rgb: 255 68 56;
   --sobre-primaria: #04191A;  --sobre-primaria-rgb: 4 25 26;    /* sobre o teal: 4.6:1 */
+  --astro: #F3E6A5;           --astro-rgb: 243 230 165;         /* lua do botão de tema */
 
   /* Escala dos vereditos nos gráficos (só marcas, nunca texto). Validada como
      paleta: vizinhas separáveis para daltonismo e visão normal, >= 3:1 contra
@@ -65,6 +66,7 @@
   --secundaria: #3D6E5F;      --secundaria-rgb: 61 110 95;      /* 5.4:1 */
   --terciaria: #806500;       --terciaria-rgb: 128 101 0;       /* 5.1:1 */
   --perigo: #C62E24;          --perigo-rgb: 198 46 36;          /* 5.1:1 */
+  --astro: #C77700;           --astro-rgb: 199 119 0;           /* sol: ícone, 3.5:1 */
 
   /* atenção fica a 2.7:1 no branco: a legenda sempre traz nome e número */
   --nivel-seguro: #0E9254;    --nivel-seguro-rgb: 14 146 84;
@@ -84,6 +86,7 @@
   --linha: var(--linha-forte);  --linha-rgb: var(--linha-forte-rgb);
   --texto-2: var(--texto);      --texto-2-rgb: var(--texto-rgb);
   --texto-3: var(--texto);      --texto-3-rgb: var(--texto-rgb);
+  --astro: var(--texto);        --astro-rgb: var(--texto-rgb);
 }
 :root[data-alto-contraste="on"] .quadro,
 :root[data-alto-contraste="on"] .veredito,

@@ -115,6 +115,11 @@ def abrir_assinado(token: str) -> str | None:
     return valor if hmac.compare_digest(assinatura, esperada) else None
 
 
+def codigo_opaco(texto: str) -> str:
+    """Código curto e estável derivado da chave do servidor; não revela ``texto``."""
+    return hmac.new(_segredo(), texto.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
+
+
 def token_aleatorio(bytes_: int = 24) -> str:
     """Para `state` do OAuth e afins."""
     return secrets.token_urlsafe(bytes_)

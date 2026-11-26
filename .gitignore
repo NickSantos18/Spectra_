@@ -4,9 +4,18 @@ __pycache__/
 build/
 dist/
 .venv/
-.pytest_cache/
+.pytest_cache*/
 .pytest_tmp*/
 .ruff_cache/
+
+# saída de medição de cobertura
+.coverage
+.coverage.*
+htmlcov/
+coverage.json
+
+# logs de execução local do servidor
+*.log
 .env
 node_modules/
 .pnpm-store/

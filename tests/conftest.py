@@ -10,6 +10,13 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def sem_credenciais_de_ia(monkeypatch):
+    """Nenhum teste fala com uma API real, mesmo com chave no ambiente de quem roda."""
+    for nome in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GROQ_API_KEY"):
+        monkeypatch.delenv(nome, raising=False)
+
+
+@pytest.fixture(autouse=True)
 def banco_temporario(tmp_path, monkeypatch):
     from spectra_link_guard.auth import bd
 

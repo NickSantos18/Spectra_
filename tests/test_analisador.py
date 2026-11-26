@@ -37,6 +37,14 @@ def test_phishing_classico_e_critico():
     assert {"marca_em_subdominio", "tld_de_risco"} <= {a.codigo for a in r.achados}
 
 
+def test_ip_disfarcado_tem_o_mesmo_risco_do_ip_comum():
+    comum = analisar("http://127.0.0.1/login")
+    for disfarce in ("http://0x7f000001/login", "http://2130706433/login", "http://127.1/login"):
+        r = analisar(disfarce)
+        assert r.risco == comum.risco and r.nivel == comum.nivel, disfarce
+        assert r.host == "127.0.0.1"
+
+
 def test_relatorio_serializa_em_json():
     r = analisar("https://exemplo.com/pagina")
     bruto = json.dumps(r.to_dict(), ensure_ascii=False)

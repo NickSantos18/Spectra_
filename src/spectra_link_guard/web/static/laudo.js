@@ -816,7 +816,23 @@ function detalharMelhoria(indice) {
   );
 }
 
+// Só a mensagem inteira conta: "oi, posso abrir?" é uma pergunta sobre o laudo.
+function respostaCurta(pergunta) {
+  const p = pergunta.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[^a-z]+/g, " ").trim();
+  if (/^(oi+|ola|opa|e ai|eai|hey|salve|bom dia|boa tarde|boa noite)( tudo( bem| bom| certo)?)?$/.test(p)) {
+    return laudoAtual
+      ? "Oi! Posso explicar a nota deste laudo, dizer se dá para abrir o link e o que fazer agora. O que você quer saber?"
+      : "Oi! Cole um link na barra de cima e eu explico o resultado, em português simples.";
+  }
+  if (/^(muito )?(obrigad[oa]|brigad[oa]|valeu|vlw)( mesmo)?$/.test(p)) {
+    return "Por nada! Se quiser entender outro ponto do laudo, é só perguntar.";
+  }
+  return null;
+}
+
 function respostaSobreLaudo(pergunta) {
+  const curta = respostaCurta(pergunta);
+  if (curta) return curta;
   if (!laudoAtual) {
     return "Ainda não há laudo aberto. Cole um link na barra de cima e eu explico o resultado — e digo o que dá para melhorar, se o site for seu.";
   }

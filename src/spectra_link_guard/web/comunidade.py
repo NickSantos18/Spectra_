@@ -1,16 +1,13 @@
 """Perfis, mensagens privadas e comunidade, com persistência no SQLite."""
 import base64
-import hashlib
-import os
-import secrets
 import struct
 import uuid
 from datetime import timedelta
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from ..auth import bd, usuario_atual, protecao, google, correio
+from ..auth import bd, usuario_atual, protecao, google, correio, papeis
 from .midias import validar_imagem, ImagemOcupada
 
 router = APIRouter()
@@ -35,9 +32,6 @@ CREATE TABLE IF NOT EXISTS publicacoes (
 CREATE TABLE IF NOT EXISTS respostas (
  id INTEGER PRIMARY KEY AUTOINCREMENT, publicacao TEXT NOT NULL REFERENCES publicacoes(id) ON DELETE CASCADE,
  autor TEXT NOT NULL REFERENCES usuarios(id), texto TEXT NOT NULL, criado_em TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS especialistas (email TEXT PRIMARY KEY);
-CREATE TABLE IF NOT EXISTS convites_blog (
- hash TEXT PRIMARY KEY, email TEXT NOT NULL, expira_em TEXT NOT NULL, usado INTEGER NOT NULL DEFAULT 0);
 """)
 
 
@@ -51,19 +45,9 @@ def exigir(request):
     return u
 
 
-def editor(u):
-    if not u.get('email_verificado'): return False
-    ids=[v.strip() for v in os.getenv('SPECTRA_EDITOR_IDS','').split(',') if v.strip()]
-    if u['id'] in ids: return True
-    emails = os.getenv("SPECTRA_EDITOR_EMAILS", "").lower().split(",")
-    return u["email"] in [e.strip() for e in emails if e.strip()]
-
-
 def pode_publicar(u):
-    if not u.get('email_verificado'): return False
-    with bd.conexao() as con:
-        especialista = con.execute("SELECT 1 FROM especialistas WHERE email = ?", (u["email"],)).fetchone()
-    return editor(u) or bool(especialista)
+    """Blog e avisos são dos admins; o papel vem só do banco (ver auth/papeis.py)."""
+    return papeis.eh_admin(u)
 
 
 def data():
@@ -83,7 +67,8 @@ def perfil(request: Request):
         p = con.execute("SELECT bio, foto FROM perfis WHERE usuario_id = ?", (u["id"],)).fetchone()
     return {**bd.publico(u), **(dict(p) if p else {"bio": "", "foto": ""}),
             "ip": request.client.host if request.client else "Indisponível",
-            "editor": editor(u), "pode_publicar": pode_publicar(u),
+            "papel": papeis.papel(u["id"]), "admin": papeis.eh_admin(u), "master": papeis.eh_master(u),
+            "pode_publicar": pode_publicar(u),
             "google_disponivel":google.configurado(),"email_disponivel":correio.configurado()}
 
 
@@ -163,7 +148,8 @@ class Mensagem(BaseModel):
 
 
 @router.get("/api/chat/{contato}")
-def conversa(contato: str, request: Request, depois: int = 0):
+def conversa(contato: str, request: Request, depois: int = Query(0, ge=0, le=2**63 - 1)):
+    # O teto é o maior INTEGER do SQLite; acima dele a consulta dava erro 500.
     u = exigir(request)
     with bd.conexao() as con:
         exigir_vinculo(con, u["id"], contato)
@@ -194,7 +180,7 @@ class Publicacao(BaseModel):
 
 
 def tipo_valido(tipo):
-    if tipo not in ("blog", "forum"):
+    if tipo not in ("blog", "forum", "aviso"):
         raise HTTPException(404, "Página não encontrada.")
 
 
@@ -204,7 +190,7 @@ def listar(tipo: str, request: Request, autor: str | None = None):
     if tipo != "explorar":
         tipo_valido(tipo)
     with bd.conexao() as con:
-        rows = con.execute("SELECT p.*,u.nome AS autor_nome,COALESCE(f.foto,'') AS autor_foto,EXISTS(SELECT 1 FROM seguidores s WHERE s.seguidor=? AND s.seguido=p.autor) AS seguindo, (SELECT count(*) FROM respostas r WHERE r.publicacao=p.id) AS respostas FROM publicacoes p JOIN usuarios u ON u.id=p.autor LEFT JOIN perfis f ON f.usuario_id=u.id WHERE (?='explorar' OR tipo=?) AND (? IS NULL OR p.autor=?) ORDER BY criado_em DESC,p.id DESC LIMIT 100", (u["id"],tipo,tipo,autor,autor)).fetchall()
+        rows = con.execute("SELECT p.*,u.nome AS autor_nome,COALESCE(f.foto,'') AS autor_foto,COALESCE(pa.papel,'membro') AS autor_papel,EXISTS(SELECT 1 FROM seguidores s WHERE s.seguidor=? AND s.seguido=p.autor) AS seguindo, (SELECT count(*) FROM respostas r WHERE r.publicacao=p.id) AS respostas, (SELECT count(*) FROM curtidas c WHERE c.publicacao=p.id) AS curtidas, EXISTS(SELECT 1 FROM curtidas c WHERE c.publicacao=p.id AND c.usuario=?) AS curtiu, EXISTS(SELECT 1 FROM fixadas fx WHERE fx.publicacao=p.id) AS fixado FROM publicacoes p JOIN usuarios u ON u.id=p.autor LEFT JOIN perfis f ON f.usuario_id=u.id LEFT JOIN papeis pa ON pa.usuario_id=u.id WHERE (?='explorar' OR tipo=?) AND (? IS NULL OR p.autor=?) ORDER BY fixado DESC,criado_em DESC,p.id DESC LIMIT 100", (u["id"],u["id"],tipo,tipo,autor,autor)).fetchall()
         from .explorar import com_midias
         return com_midias(con, rows)
 
@@ -213,8 +199,8 @@ def listar(tipo: str, request: Request, autor: str | None = None):
 def publicar(tipo: str, p: Publicacao, request: Request):
     u = exigir(request)
     tipo_valido(tipo)
-    if tipo == "blog" and not pode_publicar(u):
-        raise HTTPException(403, "O blog recebe publicações de especialistas convidados.")
+    if tipo in ("blog", "aviso") and not pode_publicar(u):
+        raise HTTPException(403, "Só administradores publicam no blog e nos avisos.")
     if len(p.titulo.strip()) < 5 or len(p.texto.strip()) < 10:
         raise HTTPException(422, "Preencha o título e o conteúdo.")
     novo = uuid.uuid4().hex
@@ -225,6 +211,10 @@ def publicar(tipo: str, p: Publicacao, request: Request):
         con.execute("INSERT INTO publicacoes VALUES (?,?,?,?,?,?)", (novo, tipo, u["id"], p.titulo.strip(), p.texto.strip(), data()))
         from .explorar import vincular
         vincular(con,u['id'],novo,p.midias)
+        if tipo == "aviso":  # aviso importante nasce fixado no topo
+            con.execute("INSERT INTO fixadas VALUES (?,?)", (novo, data()))
+    if tipo in ("blog", "aviso"):
+        papeis.registrar_acao(u["id"], "publicar_" + tipo, novo, p.titulo.strip())
     return {"id": novo}
 
 
@@ -242,12 +232,19 @@ def responder(identificador: str, p: Mensagem, request: Request):
     if not p.texto.strip():
         raise HTTPException(422, "Escreva uma resposta.")
     with bd.conexao() as con:
-        if not con.execute("SELECT 1 FROM publicacoes WHERE id=?", (identificador,)).fetchone():
+        pub = con.execute("SELECT autor FROM publicacoes WHERE id=?", (identificador,)).fetchone()
+        if not pub:
             raise HTTPException(404, "Publicação não encontrada.")
         recentes = con.execute("SELECT count(*) FROM respostas WHERE autor=? AND criado_em>?", (u["id"], (bd.agora()-timedelta(minutes=1)).isoformat(timespec="seconds"))).fetchone()[0]
         if recentes >= 10:
             raise HTTPException(429, "Aguarde um momento antes de responder novamente.")
-        con.execute("INSERT INTO respostas(publicacao,autor,texto,criado_em) VALUES (?,?,?,?)", (identificador,u["id"],p.texto.strip(),data()))
+        texto = p.texto.strip()
+        con.execute("INSERT INTO respostas(publicacao,autor,texto,criado_em) VALUES (?,?,?,?)", (identificador,u["id"],texto,data()))
+        # Avisa quem publicou e quem já participou da conversa.
+        from .interacoes import notificar
+        notificar(con, pub["autor"], u["id"], "comentario", identificador, texto)
+        for (outro,) in con.execute("SELECT DISTINCT autor FROM respostas WHERE publicacao=? AND autor NOT IN (?,?)", (identificador, u["id"], pub["autor"])).fetchall():
+            notificar(con, outro, u["id"], "resposta", identificador, texto)
     return {"ok": True}
 
 
@@ -256,48 +253,12 @@ def excluir(identificador: str, request: Request):
     u = exigir(request)
     with bd.conexao() as con:
         p = con.execute("SELECT autor FROM publicacoes WHERE id=?", (identificador,)).fetchone()
-        if not p or (p["autor"] != u["id"] and not editor(u)):
+        moderacao = p is not None and p["autor"] != u["id"]
+        if not p or (moderacao and not papeis.eh_admin(u)):
             raise HTTPException(404, "Publicação não encontrada.")
         midias=[r[0] for r in con.execute('SELECT midia FROM publicacao_midias WHERE publicacao=?',(identificador,))]
         con.execute("DELETE FROM publicacoes WHERE id=?", (identificador,))
         for midia in midias:con.execute('DELETE FROM midias WHERE id=?',(midia,))
-    return {"ok": True}
-
-
-class Convite(BaseModel):
-    email: str = Field(min_length=3, max_length=254)
-
-
-@router.post("/api/blog/convites", status_code=201)
-def convidar(p: Convite, request: Request):
-    u = exigir(request)
-    if not editor(u):
-        raise HTTPException(403, "Apenas editores podem convidar especialistas.")
-    from pydantic import TypeAdapter, EmailStr, ValidationError
-    try:
-        email = str(TypeAdapter(EmailStr).validate_python(p.email)).lower()
-    except ValidationError:
-        raise HTTPException(422, "Informe um e-mail válido.")
-    token = secrets.token_urlsafe(32)
-    with bd.conexao() as con:
-        con.execute("INSERT INTO convites_blog(hash,email,expira_em) VALUES (?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), email, (bd.agora()+timedelta(days=7)).isoformat(timespec="seconds")))
-    return {"link": str(request.base_url).rstrip("/")+"/painel/blog?convite="+token}
-
-
-class Aceite(BaseModel):
-    token: str = Field(min_length=20, max_length=100)
-
-
-@router.post("/api/blog/aceitar")
-def aceitar(p: Aceite, request: Request):
-    u = exigir(request)
-    if not u.get('email_verificado'):
-        raise HTTPException(403,'Confirme seu e-mail antes de aceitar o convite.')
-    chave = hashlib.sha256(p.token.encode()).hexdigest()
-    with bd.conexao() as con:
-        convite = con.execute("SELECT * FROM convites_blog WHERE hash=? AND usado=0 AND expira_em>?", (chave,data())).fetchone()
-        if not convite or convite["email"] != u["email"]:
-            raise HTTPException(403, "Convite inválido, expirado ou destinado a outro e-mail.")
-        con.execute("INSERT OR IGNORE INTO especialistas VALUES (?)", (u["email"],))
-        con.execute("UPDATE convites_blog SET usado=1 WHERE hash=?", (chave,))
+    if moderacao:
+        papeis.registrar_acao(u["id"], "excluir", identificador)
     return {"ok": True}

@@ -1,35 +1,35 @@
-<div class="conta-superior" data-conta hidden>
-  <a class="conta-acesso" href="/painel/perfil" data-menu="perfil" data-perfil-acesso aria-label="Abrir meu perfil">
-    <span class="conta-avatar" data-conta-inicial aria-hidden="true"></span>
-    <span class="conta-nome-superior" data-conta-nome></span>
-  </a>
-  <button class="conta-sair-superior" type="button" data-sair aria-label="Sair da conta" title="Sair da conta">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+<div class="canto-superior">
+  <div class="conta-superior" data-conta hidden>
+    <a class="conta-acesso" href="/painel/perfil" data-menu="perfil" data-perfil-acesso aria-label="Abrir meu perfil">
+      <span class="conta-avatar" data-conta-inicial aria-hidden="true"></span>
+      <span class="conta-nome-superior" data-conta-nome></span>
+    </a>
+    <button class="conta-icone-superior" type="button" data-sino aria-expanded="false" aria-controls="sino-lista" aria-label="Notificações" title="Notificações">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span class="sino-contador" data-sino-contador hidden></span>
+    </button>
+    <a class="conta-icone-superior" href="/admin" data-admin-link hidden aria-label="Administração" title="Administração">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+    </a>
+    <button class="conta-sair-superior" type="button" data-sair aria-label="Sair da conta" title="Sair da conta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+    <div class="sino-lista" id="sino-lista" data-sino-lista hidden role="region" aria-label="Notificações">
+      <p class="sino-titulo">Notificações</p>
+      <ul></ul>
+    </div>
+  </div>
+  <button class="tema-botao" type="button" data-a11y-tema aria-label="Mudar para o tema claro" title="Mudar para o tema claro">
+    <svg class="tema-astro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <mask id="tema-eclipse">
+        <rect width="24" height="24" fill="#fff" stroke="none"/>
+        <circle class="tema-sombra" cx="16.5" cy="7.5" r="7.5" fill="#000" stroke="none"/>
+      </mask>
+      <g mask="url(#tema-eclipse)"><circle class="tema-disco" cx="12" cy="12" r="9" fill="currentColor" stroke="none"/></g>
+      <g class="tema-raios">
+        <path d="M12 1.6v2.2"/><path d="m19.4 4.6-1.6 1.6"/><path d="M22.4 12h-2.2"/><path d="m19.4 19.4-1.6-1.6"/>
+        <path d="M12 22.4v-2.2"/><path d="m4.6 19.4 1.6-1.6"/><path d="M1.6 12h2.2"/><path d="m4.6 4.6 1.6 1.6"/>
+      </g>
+    </svg>
   </button>
 </div>
-<dialog class="perfil-cofre" data-perfil-cofre aria-label="Abrir perfil" aria-describedby="cofre-instrucao cofre-alternativa">
-  <button class="perfil-cofre-cancelar" type="button" data-cofre-cancelar>Cancelar <span aria-hidden="true">×</span></button>
-  <div class="perfil-cofre-conteudo">
-  <div class="perfil-cofre-palco">
-    <div class="perfil-cofre-foto" data-cofre-foto aria-hidden="true"></div>
-    <button class="perfil-cofre-cadeado" data-cofre-cadeado type="button" aria-label="Encaixar a chave no cadeado" aria-disabled="true">
-      <svg viewBox="0 0 240 280" fill="none" aria-hidden="true">
-        <path class="perfil-cofre-arco" d="M78 113V77a42 42 0 0 1 84 0v36"/>
-        <rect class="perfil-cofre-corpo" x="50" y="110" width="140" height="110" rx="9"/>
-        <path class="perfil-cofre-detalhe" d="M66 124h108M66 206h108"/>
-        <g data-cofre-fechadura class="perfil-cofre-fechadura"><circle cx="120" cy="153" r="10"/><path d="m115 160-3 20h16l-3-20"/></g>
-        <circle class="perfil-cofre-alvo" cx="120" cy="160" r="31"/>
-      </svg>
-    </button>
-    <div class="perfil-cofre-fragmentos" data-cofre-fragmentos aria-hidden="true"></div>
-    <div class="perfil-cofre-onda" aria-hidden="true"></div>
-  <button class="perfil-cofre-chave" data-cofre-chave type="button" aria-label="Selecionar chave; depois ative o cadeado" aria-pressed="false" disabled>
-    <svg viewBox="0 0 112 52" fill="none" aria-hidden="true"><path d="M12 26h57M23 26v12M37 26v9"/><circle cx="84" cy="26" r="16"/><circle class="perfil-cofre-chave-miolo" cx="84" cy="26" r="7"/></svg>
-  </button>
-  </div>
-  <div class="perfil-cofre-instrucoes">
-    <p id="cofre-instrucao" data-cofre-mensagem role="status" aria-live="polite">Arraste a chave até a fechadura.</p>
-    <p id="cofre-alternativa">Ou selecione a chave e depois o cadeado, com toque ou teclado.</p>
-  </div>
-  </div>
-</dialog>

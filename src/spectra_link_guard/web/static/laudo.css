@@ -91,6 +91,9 @@ h1, h2, h3 { margin: 0; font-family: var(--fonte-titulo); font-weight: 700; line
   border: 1px solid transparent;
   transition: background .16s, color .16s, border-color .16s;
 }
+/* Configurações é um botão (abre o painel), com a mesma cara dos links do menu. */
+button.menu-item, button.gaveta-item { width: 100%; background: none; font-family: inherit; text-align: left; cursor: pointer; }
+button.gaveta-item { border: 0; }
 .menu-item:hover { background: var(--base-2); color: var(--texto); }
 .menu-item[aria-current="page"] { background: var(--base-3); border-color: var(--linha-forte); color: var(--texto); }
 .menu-item:focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }
@@ -1034,7 +1037,7 @@ h1, h2, h3 { margin: 0; font-family: var(--fonte-titulo); font-weight: 700; line
 
 .copiloto {
   width: min(380px, calc(100vw - 36px));
-  height: min(460px, calc(100vh - 120px));
+  height: min(460px, calc(100dvh - 146px));
   display: flex; flex-direction: column;
   background: var(--base-2);
   border: 1px solid var(--linha);
@@ -1131,6 +1134,7 @@ h1, h2, h3 { margin: 0; font-family: var(--fonte-titulo); font-weight: 700; line
 /* Fica depois da regra de 640px, senão ela vence e o botão cobre a barra de abas. */
 @media (max-width: 599px) {
   .copiloto-caixa { bottom: calc(var(--abas-h) + env(safe-area-inset-bottom) + 12px); }
+  .copiloto { height: min(460px, calc(100dvh - var(--abas-h) - env(safe-area-inset-bottom) - 140px)); }
 }
 
 

@@ -1,7 +1,7 @@
 """Isolamento de conversas, perfil privado e autorização do blog."""
 from fastapi.testclient import TestClient
 from spectra_link_guard.web.app import app
-from spectra_link_guard.auth import bd
+from spectra_link_guard.auth import bd, papeis
 
 
 def confirmar(email):
@@ -49,22 +49,12 @@ def test_mensagens_so_para_participantes():
     assert a.get('/api/comunidade/usuarios').json() == []
 
 
-def test_forum_e_convite_de_especialista(monkeypatch):
-    monkeypatch.setenv('SPECTRA_EDITOR_EMAILS','editor@example.com')
-    editor, _ = conta('editor@example.com')
-    autor, _ = conta('autor@example.com')
+def test_forum_e_blog_de_admin():
+    autor, aid = conta('autor@example.com')
     outro, _ = conta('outro@example.com')
-    confirmar('editor@example.com')
-    confirmar('autor@example.com')
     post={'titulo':'Dicas de segurança', 'texto':'Como se proteger contra phishing.'}
     assert autor.post('/api/comunidade/blog', json=post).status_code == 403
-    assert autor.post('/api/blog/convites', json={'email':'outro@example.com'}).status_code == 403
-    convite=editor.post('/api/blog/convites', json={'email':'autor@example.com'})
-    assert convite.status_code == 201
-    token=convite.json()['link'].split('convite=')[1]
-    assert outro.post('/api/blog/aceitar',json={'token':token}).status_code == 403
-    assert autor.post('/api/blog/aceitar',json={'token':token}).status_code == 200
-    assert autor.post('/api/blog/aceitar',json={'token':token}).status_code == 403
+    papeis.definir(aid, 'admin', 'teste')
     assert autor.post('/api/comunidade/blog',json=post).status_code == 201
     r=autor.post('/api/comunidade/forum',json=post)
     assert r.status_code == 201
@@ -84,9 +74,9 @@ def test_paginas_exigem_login():
     for pagina in ('perfil','chat','blog','forum','explorar'):
         r = usuario.get('/painel/'+pagina)
         assert r.status_code == 200
-        menu = 'explorar' if pagina == 'chat' else pagina
+        menu = 'explorar' if pagina in ('chat', 'forum') else pagina
         assert f'data-menu="{menu}" aria-current="page"' in r.text
-        esperado = {'perfil':'energia-perfil', 'chat':'explorar', 'blog':'ondas', 'forum':'forum', 'explorar':'explorar'}.get(pagina)
+        esperado = {'perfil':'energia-perfil', 'chat':'explorar', 'blog':'ondas', 'forum':'explorar', 'explorar':'explorar'}.get(pagina)
         if esperado:
             assert f'data-efeito="{esperado}"' in r.text
         assert '__FUNDO_COMUNIDADE__' not in r.text
@@ -94,12 +84,15 @@ def test_paginas_exigem_login():
         assert '/static/conta.js?v=' in r.text
     redirecionado=usuario.get('/painel/chat',follow_redirects=False)
     assert redirecionado.headers['location']=='/painel/explorar#conversas'
+    redirecionado=usuario.get('/painel/forum',follow_redirects=False)
+    assert redirecionado.status_code == 303
+    assert redirecionado.headers['location']=='/painel/explorar'
+    assert 'data-menu="forum"' not in r.text
 
 
-def test_explorar_agrega_posts_e_estado_seguindo(monkeypatch):
-    monkeypatch.setenv('SPECTRA_EDITOR_EMAILS','editor@example.com')
+def test_explorar_agrega_posts_e_estado_seguindo():
     autor, aid = conta('editor@example.com')
-    confirmar('editor@example.com')
+    papeis.definir(aid, 'admin', 'teste')
     leitor, lid = conta('leitor@example.com')
     for tipo in ('blog','forum'):
         assert autor.post('/api/comunidade/'+tipo, json={'titulo':'Publicação de teste','texto':'Conteúdo para explorar e seguir autores.'}).status_code == 201

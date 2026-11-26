@@ -82,7 +82,12 @@
   function medir(){
     // Conteúdo ampliado, paisagem baixa e movimento reduzido usam o fluxo
     // normal. Nenhum formulário fica preso dentro de uma cena menor que ele.
-    ativo=movimento()&&window.innerHeight>=540&&conteudo.scrollHeight<=window.innerHeight-16;
+    // O piso de 480px barra celular deitado, não janela baixa de notebook.
+    // Medir com o mesmo padding da cena animada, mesmo quando ela estava
+    // desligada. O padding do fluxo normal não deve impedir sua ativação.
+    const espacos=getComputedStyle(conteudo);
+    const alturaCena=conteudo.scrollHeight-parseFloat(espacos.paddingTop)-parseFloat(espacos.paddingBottom)+120;
+    ativo=movimento()&&window.innerHeight>=480&&alturaCena<=window.innerHeight-16;
     raiz.dataset.inicioRolagem=ativo?'on':'off';
     const caixa=historia.getBoundingClientRect();
     inicio=caixa.top+window.scrollY;

@@ -1,6 +1,6 @@
 // Preserva o destino de convites durante login e cadastro, restrito ao painel local.
 const destinoInformado = new URLSearchParams(location.search).get("proximo");
-const destinoAposLogin = destinoInformado && /^\/painel(?:\/|\?|$)/.test(destinoInformado) && !/[\\\r\n]/.test(destinoInformado) ? destinoInformado : "/painel";
+const destinoAposLogin = destinoInformado && /^\/(?:painel|admin)(?:\/|\?|$)/.test(destinoInformado) && !/[\\\r\n]/.test(destinoInformado) ? destinoInformado : "/painel";
 if (destinoInformado) sessionStorage.setItem("spectra-proximo", destinoAposLogin);
 /* Spectra — tela de entrada: modais de acesso e widget do assistente.
  *
@@ -293,6 +293,7 @@ const BOAS_VINDAS = "Olá! Como posso te ajudar a navegar por esta página hoje?
 
 // Respostas por regra: só entram quando a IA do servidor não está disponível
 // (sem chave configurada, rede fora). Os rótulos também viram as sugestões.
+// Os gatilhos já vêm no formato de normalizar(): sem acento nem pontuação.
 const RESPOSTAS = [
   {
     gatilho: ["cadastr", "criar conta", "conta nova", "registr"],
@@ -310,7 +311,7 @@ const RESPOSTAS = [
       "O link de redefinição vai para esse endereço. Se ele não chegar, fale com o suporte.",
   },
   {
-    gatilho: ["como funciona", "plataforma", "o que é", "produto", "spectra faz"],
+    gatilho: ["como funciona", "plataforma", "o que e o spectra", "o que e spectra", "produto", "spectra faz", "o que faz", "para que serve", "pra que serve"],
     rotulo: "Como funciona a plataforma?",
     texto:
       "Você cola um link e o Spectra analisa sem abrir a página: a estrutura do " +
@@ -319,18 +320,76 @@ const RESPOSTAS = [
       "sinal em português simples, mais o que fazer em seguida.",
   },
   {
-    gatilho: ["preço", "custo", "quanto custa", "plano", "grátis"],
+    gatilho: ["preco", "custo", "quanto custa", "plano", "gratis"],
     rotulo: "Quanto custa?",
     texto:
       "Ainda não tenho a tabela de planos para te passar. Assim que ela existir, " +
       "aparece aqui e na página. Enquanto isso, dá para criar conta e rodar a " +
       "primeira varredura.",
   },
+  {
+    gatilho: ["golpe", "phishing", "suspeit", "fraude", "clonad", "link", "confiavel"],
+    rotulo: "Recebi um link suspeito",
+    texto:
+      "Não clique nem digite nenhum dado até conferir. Crie uma conta, cole o endereço " +
+      "em Verificar e o Spectra mostra a nota de risco e o que fazer. Desconfie de " +
+      "pressa, prêmio fácil e endereços parecidos com os de empresas conhecidas.",
+  },
+  {
+    gatilho: ["suporte", "contato", "atendente", "falar com", "whatsapp", "e mail", "email"],
+    rotulo: "Falar com o suporte",
+    texto: "Você pode escrever para contato@spectra.app. Os outros canais estão no rodapé da página.",
+  },
+  {
+    gatilho: ["posso fazer", "da pra fazer", "da para fazer", "funcionalidade", "recursos"],
+    rotulo: "O que posso fazer aqui?",
+    texto:
+      "Com uma conta, você cola um link em Verificar e recebe um laudo com nota de risco " +
+      "e explicação em português simples. Em Visão Geral vê os números das suas análises, " +
+      "em Histórico encontra o que já verificou e em Aprender descobre como reconhecer " +
+      "golpes. Explorar e Blog reúnem a comunidade, com publicações, conversas e desafios.",
+  },
+];
+
+// Conversa curta. Vem depois dos assuntos: "oi, esqueci a senha" é sobre a senha.
+// Palavra inteira, senão "oi" casaria com "dois" e "noite".
+const CONVERSA = [
+  {
+    gatilho: /\b(oi+|ola|opa|e ai|eai|hey|hello|salve|bom dia|boa tarde|boa noite|tudo bem|tudo bom|como vai)\b/,
+    texto:
+      "Oi! Tudo bem? Posso explicar como o Spectra analisa links, ajudar com sua conta " +
+      "ou dizer o que fazer com um link suspeito. Por onde quer começar?",
+  },
+  {
+    gatilho: /\b(obrigad[oa]|brigad[oa]|valeu|vlw|agradeco|thanks)\b/,
+    texto: "Por nada! Se surgir outra dúvida, é só perguntar.",
+  },
+  {
+    gatilho: /\b(tchau|ate mais|ate logo|falou|flw|adeus)\b/,
+    texto: "Até mais! Antes de clicar num link estranho, passe ele pelo Spectra.",
+  },
+  {
+    gatilho: /\b(quem e (voce|vc|tu)|seu nome|(voce|vc) se chama|(voce|vc) e (uma |um )?(ia|robo|bot|humano|pessoa))\b/,
+    texto:
+      "Sou o assistente do Spectra. No momento respondo com um roteiro de perguntas " +
+      "frequentes, então me saio melhor em dúvidas sobre a conta e sobre como a análise funciona.",
+  },
+  {
+    gatilho: /\b(ajuda|ajudar|help|socorro|duvida)\b/,
+    texto:
+      "Claro! Posso explicar como o Spectra funciona, ajudar com cadastro e senha ou " +
+      "orientar sobre um link suspeito. Qual desses é o seu caso?",
+  },
+  {
+    gatilho: /^(ok|okay|beleza|blz|certo|entendi|legal|show|perfeito|otimo)$/,
+    texto: "Combinado! Se precisar de mais alguma coisa, é só chamar.",
+  },
 ];
 
 const PADRAO =
-  "Não sei responder isso ainda. Posso ajudar com cadastro, recuperação de senha " +
-  "e como a plataforma funciona — ou você fala com o time pelo e-mail de suporte.";
+  "Essa eu ainda não consigo responder por aqui. Posso explicar como o Spectra " +
+  "funciona, ajudar com cadastro e senha ou orientar sobre um link suspeito. Para " +
+  "outros assuntos, o e-mail é contato@spectra.app.";
 
 function balao(texto, autor) {
   const linha = document.createElement("div");
@@ -356,9 +415,20 @@ function digitando() {
   return bolha;
 }
 
+function normalizar(texto) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 function responderPorRegra(pergunta) {
-  const alvo = pergunta.toLowerCase();
-  const achada = RESPOSTAS.find((r) => r.gatilho.some((g) => alvo.includes(g)));
+  const alvo = normalizar(pergunta);
+  const achada =
+    RESPOSTAS.find((r) => r.gatilho.some((g) => alvo.includes(g))) ||
+    CONVERSA.find((r) => r.gatilho.test(alvo));
   return achada ? achada.texto : PADRAO;
 }
 

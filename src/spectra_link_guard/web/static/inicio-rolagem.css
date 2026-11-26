@@ -17,7 +17,7 @@
 .inicio-apresentacao{position:relative;min-height:100svh;display:grid;place-items:center;outline:none;box-sizing:border-box}
 .inicio-apresentacao-conteudo{width:100%;max-width:1140px;text-align:center;padding:72px 32px;box-sizing:border-box}
 .inicio-sobretitulo{margin:0 0 24px;font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--primaria-clara)}
-.inicio-apresentacao #manchete{margin:0;font-family:"Hanken Grotesk",system-ui,sans-serif;font-size:clamp(2.8rem,6.6vw,6.8rem);font-weight:800;line-height:1.01;letter-spacing:-.065em;text-wrap:balance;color:var(--texto);perspective:800px}
+.inicio-apresentacao #manchete{margin:0;font-family:"Hanken Grotesk",system-ui,sans-serif;font-size:min(clamp(2.8rem,6.6vw,6.8rem),11svh);font-weight:700;line-height:1.12;letter-spacing:-.02em;text-wrap:balance;color:var(--texto);perspective:800px}
 .inicio-imersivo #manchete .letra{animation:none!important;transform-origin:50% 100%}
 .inicio-resumo{max-width:570px;margin:28px auto 0;font-family:"Inter",system-ui,sans-serif;font-weight:300;font-size:1.02rem;line-height:1.8;color:var(--texto-2)}
 .inicio-acoes{display:flex;justify-content:center;gap:12px;margin-top:30px}
@@ -32,7 +32,7 @@
 .inicio-rolar:hover{color:var(--primaria-clara)}
 .inicio-rolar svg{width:18px;height:18px}
 .inicio-traco{width:38px;height:1px;background:var(--linha-forte)}
-.inicio-indice{position:absolute;top:32px;right:36px;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.12em;color:var(--texto-2)}
+.inicio-indice{position:absolute;top:32px;right:78px;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.12em;color:var(--texto-2)}
 .inicio-indice>span+span{color:var(--texto-3)}
 
 /* A cena avança com a rolagem nativa, sem interceptar a roda do mouse. */
@@ -52,13 +52,13 @@
 @media(max-width:599px){
   .inicio-identidade .inicio-logo{width:78vw;max-width:340px}
   .inicio-apresentacao-conteudo{padding:56px 24px}
-  .inicio-apresentacao #manchete{font-size:clamp(2.35rem,10.4vw,3.6rem);letter-spacing:-.05em;line-height:1.06}
+  .inicio-apresentacao #manchete{font-size:min(clamp(2.35rem,10.4vw,3.6rem),7svh);letter-spacing:-.015em;line-height:1.14}
   .inicio-sobretitulo{font-size:.56rem;margin-bottom:20px;letter-spacing:.18em}
   .inicio-resumo{font-size:.87rem;line-height:1.7;margin-top:22px}
   .inicio-acoes{flex-direction:column;gap:10px;margin-top:24px}
   .inicio-botao{min-height:48px;justify-content:center;gap:24px}
   .inicio-nota{font-size:.5rem;margin-top:18px}
-  .inicio-indice{top:24px;right:24px;font-size:.5rem}
+  .inicio-indice{top:24px;right:64px;font-size:.5rem}
   .inicio-rolar{font-size:.5rem;gap:10px}
   .inicio-traco{display:none}
   :root[data-inicio-rolagem="on"] .inicio-indice{top:24px}

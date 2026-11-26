@@ -21,9 +21,34 @@ window.SpectraExplorar = (() => {
     if(aba==='conexoes')await conexoes(atual);
     if(aba==='desafios')await carregarCatalogo(atual);
   }
+  function iconeConversa(){
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');
+    const caminho=document.createElementNS('http://www.w3.org/2000/svg','path');caminho.setAttribute('d','M7.9 20A9 9 0 1 0 4 16.1L2 22Z');svg.append(caminho);return svg;
+  }
+  let graficoAlcance=null;
+  function desenharAlcance(d){
+    for(const k of ['seguidores','seguindo','curtidas'])el('alcance-'+k).textContent=String(d[k]);
+    const total=d.por_dia.reduce((s,x)=>s+x.curtidas,0);
+    el('g-alcance').setAttribute('aria-label',`Últimos 30 dias: ${d.seguidores} seguidores hoje e ${total} curtidas recebidas no período.`);
+    const desenhar=()=>{
+      if(!window.Chart)return;
+      const cor=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
+      const fonte={family:'"JetBrains Mono", ui-monospace, monospace',size:10};
+      const eixo={beginAtZero:true,border:{display:false},grid:{color:cor('linha'),drawTicks:false},ticks:{color:cor('texto-3'),font:fonte,precision:0,maxTicksLimit:5}};
+      graficoAlcance?.destroy();
+      graficoAlcance=new Chart(el('g-alcance'),{data:{labels:d.por_dia.map(x=>{const[,m,dd]=x.dia.split('-');return dd+'/'+m;}),datasets:[
+        {type:'line',label:'Seguidores',data:d.por_dia.map(x=>x.seguidores),borderColor:cor('primaria-clara'),backgroundColor:cor('primaria-clara'),borderWidth:2,pointRadius:0,pointHitRadius:10,stepped:true},
+        {type:'bar',label:'Curtidas recebidas',data:d.por_dia.map(x=>x.curtidas),backgroundColor:`rgb(${cor('perigo-rgb')} / .55)`}]},
+        options:{maintainAspectRatio:false,animation:window.spectraMovimentoLigado&&!window.spectraMovimentoLigado()?false:undefined,interaction:{mode:'index',intersect:false},
+          scales:{x:{grid:{display:false},border:{display:false},ticks:{color:cor('texto-3'),font:fonte,maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:eixo},plugins:{legend:{display:false}}}});
+    };
+    // O Chart.js chega com defer: se a aba abriu antes dele, desenha quando a página terminar de carregar.
+    if(window.Chart)desenhar();else window.addEventListener('load',desenhar,{once:true});
+  }
   async function conexoes(atual){
-    const resultados=await Promise.all(['seguindo','seguidores'].map(t=>api('/api/conexoes/'+t)));
+    const [resultados,alcance]=await Promise.all([Promise.all(['seguindo','seguidores'].map(t=>api('/api/conexoes/'+t))),api('/api/alcance')]);
     if(atual!==versao)return;
+    desenharAlcance(alcance);
     ['seguindo','seguidores'].forEach((tipo,i)=>{
       const lista=resultados[i],destino=el('lista-'+tipo);destino.replaceChildren();el('total-'+tipo).textContent='('+lista.length+')';
       if(!lista.length)destino.append(no('p',tipo==='seguindo'?'Você ainda não segue ninguém. Conheça os autores no Feed.':'Seus seguidores aparecerão aqui.'));
@@ -31,7 +56,9 @@ window.SpectraExplorar = (() => {
         if(u.foto){const img=no('img',undefined,'avatar-mini');img.src=u.foto;img.alt='';a.prepend(img);}linha.append(a);
         const seguir=no('button',u.seguindo?'Deixar de seguir':'Seguir de volta');seguir.type='button';
         seguir.onclick=executar(async()=>{seguir.disabled=true;try{await api(`/api/usuarios/${u.id}/seguir`,u.seguindo?'DELETE':'POST');await conexoes(versao);}finally{seguir.disabled=false;}});
-        const conversar=no('a','Conversar');conversar.href='#conversas';linha.append(seguir,conversar);destino.append(linha);
+        const conversar=no('a',undefined,'conexao-conversar');conversar.href='#conversas';conversar.dataset.conversar=u.id;
+        conversar.setAttribute('aria-label','Conversar com '+u.nome);conversar.title='Conversar com '+u.nome;conversar.append(iconeConversa());
+        linha.append(seguir,conversar);destino.append(linha);
       }
     });
   }

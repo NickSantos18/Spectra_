@@ -28,7 +28,9 @@ class ProtecaoHTTP:
         scope.setdefault('state',{})['csp_nonce']=nonce
         async def seguro(message):
             if message['type']=='http.response.start':
-                headers=dict(message.get('headers',[]))
+                # Só os cabeçalhos definidos aqui são substituídos; repetidos
+                # legítimos (vários Set-Cookie) seguem intactos.
+                headers={}
                 headers[b'x-content-type-options']=b'nosniff'
                 headers[b'x-frame-options']=b'DENY'
                 headers[b'referrer-policy']=b'no-referrer'
@@ -37,7 +39,8 @@ class ProtecaoHTTP:
                 if caminho.startswith(('/api/','/painel','/auth/','/redefinir-senha','/confirmar-email')):
                     headers[b'cache-control']=b'no-store'
                 if protecao.producao(): headers[b'strict-transport-security']=b'max-age=31536000'
-                message['headers']=list(headers.items())
+                originais=[(k,v) for k,v in message.get('headers',[]) if k.lower() not in headers]
+                message['headers']=originais+list(headers.items())
             await send(message)
         async def erro(status,texto,headers=None):
             return await JSONResponse({'erro':texto},status_code=status,headers=headers)(scope,receive,seguro)
@@ -53,8 +56,8 @@ class ProtecaoHTTP:
                 return await erro(415,'Envie dados em JSON.')
             try:
                 acao,maximo,janela='api-escrita',120,60
-                if caminho=='/api/auth/cadastrar': acao,maximo,janela='cadastro',8,3600
-                elif caminho in ('/api/auth/recuperar','/api/auth/verificar-email'): acao,maximo,janela=caminho,5,900
+                # O cadastro tem limite próprio na rota: só contas criadas contam.
+                if caminho in ('/api/auth/recuperar','/api/auth/verificar-email'): acao,maximo,janela=caminho,5,900
                 elif caminho.startswith('/api/auth/redefinir'): acao,maximo,janela='redefinicao',8,900
                 elif caminho=='/api/midias': acao,maximo,janela='upload',12,300
                 elif caminho.startswith('/api/chat'): acao,maximo,janela='mensagem',40,60

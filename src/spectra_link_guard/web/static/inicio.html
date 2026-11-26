@@ -73,6 +73,11 @@
     animation-delay: var(--atraso);
   }
 
+  /* O chat encolhe em janela baixa: embaixo fica o botão de abrir (5.75rem) e em
+     cima 64px livres, para o cabeçalho e o fechar não irem para baixo do tema. */
+  #chat { max-height: calc(100dvh - 5.75rem - 64px); }
+  @media (max-height: 560px) { #chat-sugestoes { display: none; } }
+
   /* O autofill do Chrome pinta o campo de azul-claro e apaga o texto. */
   input:-webkit-autofill,
   input:-webkit-autofill:focus {

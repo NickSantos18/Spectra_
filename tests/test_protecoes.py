@@ -58,12 +58,13 @@ def test_cabecalhos_nonce_e_limite_corpo():
     assert c.post('/api/auth/cadastrar',content='{}',headers={'Content-Type':'text/plain'}).status_code==415
 
 
-def test_editor_nao_verificado_nao_recebe_privilegios(monkeypatch):
+def test_variavel_antiga_de_editor_nao_da_privilegio(monkeypatch):
+    # Instalações antigas podem manter SPECTRA_EDITOR_EMAILS no .env; papéis agora vêm só do banco.
     monkeypatch.setenv('SPECTRA_EDITOR_EMAILS','pessoa@example.com')
+    monkeypatch.setenv('SPECTRA_EDITOR_IDS','')
     c,u=conta()
-    assert c.post('/api/blog/convites',json={'email':'autor@example.com'}).status_code==403
+    with bd.conexao() as con: con.execute('UPDATE usuarios SET email_verificado=1 WHERE id=?',(u['id'],))
     assert c.post('/api/comunidade/blog',json={'titulo':'Título de teste','texto':'Publicação de teste.'}).status_code==403
-    assert bd.buscar_por_id(u['id'])['email_verificado']==0
 
 
 @pytest.mark.parametrize('ip',['127.0.0.1','10.0.0.1','169.254.169.254','192.168.1.1','100.64.0.1','0.0.0.0','224.0.0.1','::1','fc00::1','fe80::1','::ffff:127.0.0.1','64:ff9b::7f00:1','2002:7f00:1::'])
@@ -169,8 +170,6 @@ def test_sessao_tem_limite_absoluto():
 
 
 def test_scrypt_antigo_migra_no_login():
-    from spectra_link_guard.auth.rotas import freio
-    freio._por_ip.clear()
     sal=b'1234567890123456'
     chave=hashlib.scrypt(b'Senha-forte123!',salt=sal,n=16384,r=8,p=1,dklen=32)
     u=bd.criar_usuario(nome='Pessoa',email='antiga@example.com',senha_hash=f'scrypt$16384$8$1${sal.hex()}${chave.hex()}')

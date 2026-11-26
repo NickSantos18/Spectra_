@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Administração · Spectra</title>
+<meta name="description" content="Administração do Spectra: acessos, blog, avisos e administradores.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/laudo.css">
+<link rel="stylesheet" href="/static/rodape.css">
+<link rel="stylesheet" href="/static/animacoes.css">
+<link rel="stylesheet" href="/static/admin.css">
+<link rel="icon" href="/static/logo-spectra-escuro.svg">
+<script src="/static/movimento.js"></script>
+<script src="/static/acessibilidade.js"></script>
+<script src="/static/animacoes.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.js" defer
+        integrity="sha384-WBRt9V/J/erVtkEuP91HUFRv9MvHzFiFOp4/zTDp4xkcMG7aOeIv2asTV4yxFLWa" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer
+        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+</head>
+<body data-estado="seguro" class="admin-pagina">
+
+<div class="fundo-fixo" aria-hidden="true"><canvas class="fundo-animado" data-efeito="varredura"></canvas></div>
+
+<div class="app">
+
+<!--PARCIAL:menu-->
+
+<div class="corpo">
+
+<header class="barra hist-barra">
+  <h1 class="hist-titulo">Administração</h1>
+  <span class="adm-selo" id="adm-papel"></span>
+</header>
+
+<main class="adm" id="adm">
+  <div class="adm-abas" role="tablist" aria-label="Seções da administração">
+    <button type="button" role="tab" data-aba="visao" aria-selected="true">Visão geral</button>
+    <button type="button" role="tab" data-aba="blog" aria-selected="false">Blog e avisos</button>
+    <button type="button" role="tab" data-aba="admins" aria-selected="false" hidden>Admins</button>
+    <button type="button" role="tab" data-aba="registro" aria-selected="false">Registro de ações</button>
+  </div>
+  <p class="adm-aviso" id="adm-aviso" role="status" aria-live="polite"></p>
+
+  <section data-painel="visao" role="tabpanel" aria-label="Visão geral">
+    <div class="adm-apresentacao">
+      <div><span class="adm-eyebrow">SPECTRA · INTELIGÊNCIA DO SITE</span><h2>O pulso da sua comunidade.</h2><p>Acompanhe o movimento, descubra tendências e explore os números.</p></div>
+      <span class="adm-status"><span></span>Dados da última consulta</span>
+    </div>
+    <div class="adm-kpis" id="adm-kpis" aria-live="polite"></div>
+    <section class="quadro adm-quadro">
+      <header class="quadro-topo">
+        <h2 class="quadro-titulo">Crescimento diário</h2>
+        <div class="adm-periodos" role="group" aria-label="Período do crescimento"><button type="button" data-periodo="7" aria-pressed="false">7 dias</button><button type="button" data-periodo="14" aria-pressed="false">14 dias</button><button type="button" data-periodo="30" aria-pressed="true">30 dias</button></div>
+      </header>
+      <div class="quadro-corpo">
+        <p class="adm-insight" id="adm-resumo-dias" aria-live="polite"></p>
+        <div class="grafico-caixa grafico-alto"><canvas id="g-dias" role="img" aria-label="Acessos por dia e total de contas nos últimos 30 dias"></canvas></div>
+      </div>
+    </section>
+    <section class="quadro adm-quadro">
+      <header class="quadro-topo">
+        <h2 class="quadro-titulo">Acessos por horário</h2>
+        <span class="quadro-marca mono">média dos últimos 7 dias</span>
+      </header>
+      <div class="quadro-corpo">
+        <p class="adm-insight"><strong id="pico"></strong> · Explore as barras para comparar os públicos.</p>
+        <div class="grafico-caixa grafico-alto"><canvas id="g-horas" role="img" aria-label="Média de acessos por hora do dia"></canvas></div>
+      </div>
+    </section>
+    <p class="adm-nota">Toque nos gráficos para ver os valores. Use as legendas para mostrar ou ocultar cada série.</p>
+    <p class="adm-nota">Cada página aberta conta como um acesso. Pessoas diferentes são contadas sem guardar IP nem usar cookie de rastreamento.</p>
+  </section>
+
+  <section data-painel="blog" role="tabpanel" aria-label="Blog e avisos" hidden>
+    <form class="quadro adm-form" id="form-publicar">
+      <h2 class="quadro-titulo">Nova publicação</h2>
+      <fieldset class="adm-tipo">
+        <legend>Tipo</legend>
+        <label><input type="radio" name="tipo" value="blog" checked> Post do blog</label>
+        <label><input type="radio" name="tipo" value="aviso"> Aviso importante <small>(fica fixado no topo do site)</small></label>
+      </fieldset>
+      <label for="pub-titulo">Título</label>
+      <input id="pub-titulo" required minlength="5" maxlength="180">
+      <label for="pub-texto">Texto</label>
+      <textarea id="pub-texto" required minlength="10" maxlength="20000" rows="6"></textarea>
+      <label for="pub-capa">Imagem de capa (opcional)</label>
+      <input id="pub-capa" type="file" accept="image/png,image/jpeg,image/webp">
+      <button type="submit" class="botao-primario">Publicar</button>
+    </form>
+    <h2 class="adm-subtitulo">Publicadas</h2>
+    <ul class="adm-lista" id="adm-publicacoes"></ul>
+  </section>
+
+  <section data-painel="admins" role="tabpanel" aria-label="Administradores" hidden>
+    <form class="quadro adm-form" id="form-busca" role="search">
+      <h2 class="quadro-titulo">Promover uma conta a admin</h2>
+      <label for="busca-conta">Nome ou e-mail da pessoa</label>
+      <div class="adm-busca"><input id="busca-conta" minlength="2" maxlength="120" required><button type="submit" class="botao-primario">Buscar</button></div>
+      <ul class="adm-lista" id="resultado-contas"></ul>
+      <p class="adm-nota">Confira se o e-mail está confirmado antes de promover. Admins publicam no blog e nos avisos e veem estes números; só você, master, muda quem é admin.</p>
+    </form>
+    <h2 class="adm-subtitulo">Administradores atuais</h2>
+    <ul class="adm-lista" id="lista-admins"></ul>
+  </section>
+
+  <section data-painel="registro" role="tabpanel" aria-label="Registro de ações" hidden>
+    <ol class="adm-lista" id="lista-registro"></ol>
+  </section>
+</main>
+<!--PARCIAL:rodape-->
+</div>
+</div>
+<!--PARCIAL:acessibilidade-->
+<script src="/static/fundo.js" defer></script>
+<script src="/static/menu.js" defer></script>
+<script src="/static/admin.js" defer></script>
+</body>
+</html>

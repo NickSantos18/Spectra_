@@ -6,7 +6,7 @@
   let eu, contato = null, ultima = 0, foto = '', carregando = false, buscaVersao = 0;
   let fotoOriginal=null;
   let arquivosMidia=[],previewsMidia=[],uploadsMidia=new Map();
-  const titulos = {perfil:'Perfil',chat:'Conversas',explorar:'Explorar',blog:'Blog de especialistas',forum:'Fórum de cibersegurança'};
+  const titulos = {perfil:'Perfil',chat:'Conversas',explorar:'Explorar',blog:'Blog',forum:'Fórum de cibersegurança'};
   function aviso(texto, erro=false){el('aviso').textContent=texto;el('aviso').dataset.erro=erro;}
   function no(tag,texto,classe){const n=document.createElement(tag);if(texto!==undefined)n.textContent=texto;if(classe)n.className=classe;return n;}
   async function api(url,method='GET',dados){
@@ -39,11 +39,7 @@
     }else if(pagina==='chat'){el('chat').hidden=false;await contatos();}
     else{
       el('publicacoes').hidden=false;
-      const token=new URLSearchParams(location.search).get('convite');
-      if(token&&pagina==='blog'){
-        await api('/api/blog/aceitar','POST',{token});history.replaceState({},'',location.pathname);eu=await api('/api/perfil');aviso('Convite aceito! Você já pode publicar no blog.');
-      }
-      el('form-publicacao').hidden=pagina==='blog'&&!eu.pode_publicar;el('blog-info').hidden=pagina!=='blog'||eu.pode_publicar;el('convites').hidden=pagina!=='blog'||!eu.editor;el('compor-titulo').textContent=pagina==='blog'?'Escrever artigo':'Compartilhar com a comunidade';await publicacoes();
+      el('form-publicacao').hidden=pagina==='blog'&&!eu.pode_publicar;el('blog-info').hidden=pagina!=='blog'||eu.pode_publicar;el('compor-titulo').textContent=pagina==='blog'?'Escrever artigo':'Compartilhar com a comunidade';await publicacoes();
     }
   }
   async function mostrarMembro(){
@@ -54,6 +50,7 @@
     el('membro-total').textContent=membro.total_publicacoes+' publicação(ões)';
     el('membro-foto').hidden=!membro.foto;el('membro-inicial').hidden=!!membro.foto;
     el('membro-foto').src=membro.foto;el('membro-inicial').textContent=membro.nome.charAt(0).toUpperCase();
+    el('voltar-explorar').hidden=membro.id===eu.id;
     const seguir=el('membro-seguir');seguir.hidden=membro.id===eu.id;
     el('membro-editar').hidden=membro.id!==eu.id;seguir.dataset.seguir=membro.id;estadoSeguir(membro.id,!!membro.seguindo);
     seguir.onclick=executar(async()=>{seguir.disabled=true;try{const d=await api('/api/usuarios/'+membro.id+'/seguir',seguir.getAttribute('aria-pressed')==='true'?'DELETE':'POST');estadoSeguir(membro.id,d.seguindo);}finally{seguir.disabled=false;}});
@@ -102,13 +99,16 @@
   async function publicacoes(){
     const endereco=pagina==='perfil'?'/api/comunidade/explorar?autor='+encodeURIComponent(perfilVisitado||eu.id):'/api/comunidade/'+pagina;
     const lista=await api(endereco);el('lista-publicacoes').replaceChildren();
-    if(!lista.length)el('lista-publicacoes').append(no('p',pagina==='perfil'?'Nenhuma publicação por aqui ainda.':pagina==='blog'?'Os primeiros artigos dos especialistas aparecerão aqui.':'Ainda não há discussões. Comece a primeira!'));
+    if(!lista.length)el('lista-publicacoes').append(no('p',pagina==='perfil'?'Nenhuma publicação por aqui ainda.':pagina==='blog'?'Os primeiros artigos do Spectra aparecerão aqui.':'Ainda não há discussões. Comece a primeira!'));
     for(const p of lista){
       const card=no('article',undefined,'social-card');
       const cabecalho=no('div',undefined,'post-autor');
       const autor=linkPerfil(p.autor,p.autor_nome);autor.className='autor-perfil';
       if(p.autor_foto){const img=no('img',undefined,'avatar-mini');img.src=p.autor_foto;img.alt='';autor.prepend(img);}
-      cabecalho.append(autor,no('span',p.tipo==='blog'?'Blog':'Comunidade','post-meta'));
+      cabecalho.append(autor);
+      if(p.autor_papel&&p.autor_papel!=='membro')cabecalho.append(no('span','Admin','selo-admin'));
+      cabecalho.append(no('span',p.tipo==='blog'?'Blog':p.tipo==='aviso'?'Aviso':'Comunidade','post-meta'));
+      if(p.fixado){card.classList.add('fixado');cabecalho.append(no('span','📌 Fixado','post-fixado'));}
       if(p.autor!==eu.id){
         const seguir=no('button',p.seguindo?'Seguindo':'Seguir');seguir.type='button';seguir.dataset.seguir=p.autor;seguir.setAttribute('aria-pressed',String(!!p.seguindo));
         seguir.onclick=executar(async()=>{seguir.disabled=true;try{const d=await api(`/api/usuarios/${p.autor}/seguir`,seguir.getAttribute('aria-pressed')==='true'?'DELETE':'POST');estadoSeguir(p.autor,d.seguindo);aviso(d.seguindo?'Você está seguindo '+p.autor_nome+'. Essa pessoa já aparece nas suas conversas.':'Você deixou de seguir '+p.autor_nome+'.');}finally{seguir.disabled=false;}});cabecalho.append(seguir);
@@ -121,10 +121,13 @@
           galeria.append(item);
         }card.append(galeria);
       }
-      const acoes=no('div',undefined,'post-acoes');const abrir=no('button',`Comentários (${p.respostas})`);abrir.type='button';acoes.append(abrir);const area=no('div',undefined,'respostas');area.hidden=true;
+      const acoes=no('div',undefined,'post-acoes');
+      const curtir=no('button',`♥ ${p.curtidas||0}`,'botao-curtir');curtir.type='button';curtir.dataset.curtir=p.id;curtir.setAttribute('aria-pressed',String(!!p.curtiu));curtir.setAttribute('aria-label',`Curtir: ${p.curtidas||0} curtida(s)`);
+      curtir.onclick=executar(async()=>{curtir.disabled=true;try{const d=await api(`/api/publicacoes/${p.id}/curtida`,curtir.getAttribute('aria-pressed')==='true'?'DELETE':'POST');curtir.textContent=`♥ ${d.curtidas}`;curtir.setAttribute('aria-pressed',String(d.curtido));curtir.setAttribute('aria-label',`Curtir: ${d.curtidas} curtida(s)`);}finally{curtir.disabled=false;}});
+      const abrir=no('button',`Comentários (${p.respostas})`);abrir.type='button';acoes.append(curtir,abrir);const area=no('div',undefined,'respostas');area.hidden=true;
       async function comentarios(){area.replaceChildren();const rs=await api(`/api/publicacoes/${p.id}/respostas`);if(!rs.length)area.append(no('p','Seja a primeira pessoa a comentar.'));for(const r of rs){const box=no('div',undefined,'resposta');box.append(linkPerfil(r.autor,r.autor_nome),no('p',r.texto),no('small',horario(r.criado_em)));area.append(box);}const form=no('form',undefined,'social-form');const label=no('label','Seu comentário');const campo=no('textarea');campo.id='resposta-'+p.id;label.htmlFor=campo.id;campo.required=true;campo.maxLength=4000;campo.rows=3;const enviar=no('button','Comentar');form.append(label,campo,enviar);form.addEventListener('submit',executar(async()=>{enviar.disabled=true;try{await api(`/api/publicacoes/${p.id}/respostas`,'POST',{texto:campo.value});p.respostas++;abrir.textContent=`Comentários (${p.respostas})`;await comentarios();}finally{enviar.disabled=false;}}));area.append(form);}
       abrir.onclick=executar(async()=>{area.hidden=!area.hidden;abrir.setAttribute('aria-expanded',String(!area.hidden));if(!area.hidden)await comentarios();});abrir.setAttribute('aria-expanded','false');
-      if(p.autor===eu.id||eu.editor){const excluir=no('button','Excluir publicação');excluir.type='button';excluir.onclick=executar(async()=>{if(!confirm('Excluir esta publicação e seus comentários?'))return;await api('/api/publicacoes/'+p.id,'DELETE');await publicacoes();});acoes.append(excluir);}
+      if(p.autor===eu.id||eu.admin){const excluir=no('button','Excluir publicação');excluir.type='button';excluir.onclick=executar(async()=>{if(!confirm('Excluir esta publicação e seus comentários?'))return;await api('/api/publicacoes/'+p.id,'DELETE');await publicacoes();});acoes.append(excluir);}
       card.append(acoes,area);el('lista-publicacoes').append(card);
     }
   }
@@ -158,6 +161,5 @@
       if(pagina==='explorar'){location.hash='feed';}else await publicacoes();
     }finally{b.disabled=false;b.textContent='Publicar';}
   }));
-  el('form-convite').addEventListener('submit',executar(async()=>{const d=await api('/api/blog/convites','POST',{email:el('email-convite').value});el('link-convite').replaceChildren(no('span','Compartilhe este link com o especialista: '));const link=no('a',d.link);link.href=d.link;el('link-convite').append(link);}));
   executar(iniciar)();
 })();

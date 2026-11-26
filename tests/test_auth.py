@@ -12,7 +12,6 @@ fastapi = pytest.importorskip("fastapi", reason="extra 'web' não instalado")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from spectra_link_guard.auth import bd, seguranca  # noqa: E402
-from spectra_link_guard.auth.rotas import freio  # noqa: E402
 from spectra_link_guard.web.app import app  # noqa: E402
 
 CONTA = {"nome": "Ana Ribeiro", "email": "ana@exemplo.com.br", "senha": "senha-forte-123"}
@@ -20,7 +19,6 @@ CONTA = {"nome": "Ana Ribeiro", "email": "ana@exemplo.com.br", "senha": "senha-f
 
 @pytest.fixture
 def cliente() -> TestClient:
-    freio._por_ip.clear()
     return TestClient(app)
 
 

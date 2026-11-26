@@ -2,7 +2,7 @@
 import random
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from ..auth import bd
+from ..auth import bd, seguranca
 from .comunidade import exigir, data
 
 router=APIRouter()
@@ -98,11 +98,18 @@ def fase_disponivel(con,usuario,jogo,fase):
     return JOGOS[jogo]['fases'][fase-1]
 
 
+def _codigos(usuario,jogo,fase,f):
+    """Código opaco de cada item -> posição interna. Ids "0..n" entregavam a ordem certa."""
+    return {seguranca.codigo_opaco(f'desafio|{usuario}|{jogo}|{fase}|{i["id"]}'):i['id'] for i in f['itens']}
+
+
 @router.get('/api/desafios/{jogo}/fases/{fase}')
 def carregar(jogo:str,fase:int,request:Request):
     u=exigir(request)
     with bd.conexao() as con:f=fase_disponivel(con,u['id'],jogo,fase)
-    itens=list(f['itens']);random.SystemRandom().shuffle(itens)
+    textos={i['id']:i['texto'] for i in f['itens']}
+    itens=[{'id':codigo,'texto':textos[interno]} for codigo,interno in _codigos(u['id'],jogo,fase,f).items()]
+    random.SystemRandom().shuffle(itens)
     return {k:f[k] for k in ('titulo','contexto','modo')}|{'itens':itens,'fase':fase,'total_fases':len(JOGOS[jogo]['fases'])}
 
 
@@ -117,9 +124,10 @@ def responder(jogo:str,fase:int,p:Resposta,request:Request):
         # Serializa tentativas simultâneas antes de conferir o desbloqueio.
         con.execute('BEGIN IMMEDIATE')
         f=fase_disponivel(con,u['id'],jogo,fase)
-        ids={i['id'] for i in f['itens']}
-        if len(p.itens)!=len(set(p.itens)) or not set(p.itens)<=ids or (f['modo']=='ordem' and set(p.itens)!=ids) or (f['modo']=='escolha' and len(p.itens)!=1):
+        codigos=_codigos(u['id'],jogo,fase,f)
+        if len(p.itens)!=len(set(p.itens)) or not set(p.itens)<=codigos.keys() or (f['modo']=='ordem' and set(p.itens)!=codigos.keys()) or (f['modo']=='escolha' and len(p.itens)!=1):
             raise HTTPException(422,'Selecione uma alternativa ou organize todos os itens sem repetir.')
+        p.itens=[codigos[c] for c in p.itens]
         antes=con.execute('SELECT tentativas FROM desafio_fases WHERE usuario_id=? AND jogo=? AND fase=?',(u['id'],jogo,fase)).fetchone()
         tentativas=antes['tentativas'] if antes else 0
         acertou=p.itens==f['correta'];pontos=max(25,100-tentativas*15) if acertou else 0

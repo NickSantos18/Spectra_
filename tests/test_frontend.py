@@ -79,6 +79,29 @@ def test_tokens_definem_tema_escuro_e_claro_com_triplets():
     assert "--base: #070B14;" in escuro
 
 
+def test_tema_escuro_e_o_padrao_e_nao_segue_o_sistema():
+    js = (ESTATICOS / "acessibilidade.js").read_text(encoding="utf-8")
+    assert "prefers-color-scheme" not in js
+    assert 'lerEscolha(CHAVE_TEMA) === "claro" ? "claro" : "escuro"' in js
+
+
+def test_animacao_do_tema_respeita_o_movimento_parado():
+    css = (ESTATICOS / "conta.css").read_text(encoding="utf-8")
+    regra = re.search(r':root\[data-movimento="off"\] \.tema-astro[^{]*\{([^}]*)\}', css)
+    assert regra and "transition:none!important" in regra.group(1)
+
+
+def test_chat_da_entrada_nao_termina_em_beco_sem_saida():
+    js = (ESTATICOS / "inicio.js").read_text(encoding="utf-8")
+    assert "Não sei responder isso ainda" not in js
+    assert "CONVERSA" in js
+
+
+def test_chats_nao_passam_do_topo_nem_ficam_sob_o_botao_de_tema():
+    assert "#chat { max-height: calc(100dvh" in _html("inicio.html")
+    assert "height: min(460px, calc(100dvh - 146px))" in (ESTATICOS / "laudo.css").read_text(encoding="utf-8")
+
+
 def test_toda_pagina_carrega_tokens_antes_dos_outros_estilos():
     for nome in PAGINAS:
         folhas = re.findall(r'<link rel="stylesheet" href="/static/([^"]+)"', _html(nome))
@@ -106,6 +129,7 @@ def test_historico_tem_apagar_tudo_com_confirmacao():
 EFEITOS_POR_PAGINA = {
     "visao-geral.html": "varredura",
     "historico.html": "varredura",
+    "admin.html": "varredura",
     "aprender.html": "chuva-hex",
     "inicio.html": ["circuitos", "chuva-hex"],
 }

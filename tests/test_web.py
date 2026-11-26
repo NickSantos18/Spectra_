@@ -318,6 +318,20 @@ def test_paginas_publicas_trazem_rodape_e_acessibilidade_sem_menu(cliente, rota)
     assert 'class="trilho"' not in html
 
 
+@pytest.mark.parametrize("rota", ["/inicio", "/privacidade", "/termos"])
+def test_botao_de_tema_fica_no_canto_superior_e_fora_do_painel(cliente, rota):
+    html = cliente.get(rota).text
+    assert html.count("data-a11y-tema") == 1
+    assert html.index('class="canto-superior"') < html.index("data-a11y-tema")
+    assert html.index("data-a11y-tema") < html.index('id="a11y-painel"')
+
+
+def test_botao_de_tema_aparece_em_todas_as_telas_do_painel(cliente):
+    entrar(cliente)
+    for rota, _ in TELAS_DO_PAINEL:
+        assert cliente.get(rota).text.count("data-a11y-tema") == 1, rota
+
+
 def test_rodape_e_acessibilidade_moram_so_nos_parciais():
     from spectra_link_guard.web.app import ESTATICOS
 

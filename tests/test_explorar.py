@@ -71,6 +71,25 @@ def test_video_tipo_e_limites():
     assert a.post('/api/midias',content=PNG,headers={'content-type':'image/png','Origin':'https://outro.invalid'}).status_code==403
 
 
+def _ids_por_texto(cliente, jogo, fase):
+    """A API usa códigos opacos; o teste localiza cada item pelo texto."""
+    dados = cliente.get(f'/api/desafios/{jogo}/fases/{fase}').json()
+    return {i['texto']: i['id'] for i in dados['itens']}
+
+
+def resposta_certa(cliente, jogo, fase):
+    f = JOGOS[jogo]['fases'][fase - 1]
+    textos = {i['id']: i['texto'] for i in f['itens']}
+    ids = _ids_por_texto(cliente, jogo, fase)
+    return [ids[textos[c]] for c in f['correta']]
+
+
+def resposta_errada(cliente, jogo, fase):
+    f = JOGOS[jogo]['fases'][fase - 1]
+    errado = next(i['texto'] for i in f['itens'] if i['id'] not in f['correta'])
+    return [_ids_por_texto(cliente, jogo, fase)[errado]]
+
+
 def test_cinco_trilhas_sequenciais_correcao_e_progresso_isolado():
     a,_=conta('a@example.com');b,_=conta('b@example.com')
     anon=TestClient(app)
@@ -83,10 +102,10 @@ def test_cinco_trilhas_sequenciais_correcao_e_progresso_isolado():
             dados=a.get(f'/api/desafios/{id}/fases/{fase}').json()
             assert 'correta' not in dados and 'explicacao' not in dados
             assert len(dados['itens'])>=3
-            resp=a.post(f'/api/desafios/{id}/fases/{fase}/responder',json={'itens':f['correta'],'pontos':999999})
+            resp=a.post(f'/api/desafios/{id}/fases/{fase}/responder',json={'itens':resposta_certa(a,id,fase),'pontos':999999})
             assert resp.status_code==200 and resp.json()['acertou']
             assert resp.json()['progresso']['concluidas']==fase
-        repetir=a.post(f'/api/desafios/{id}/fases/1/responder',json={'itens':jogo['fases'][0]['correta']})
+        repetir=a.post(f'/api/desafios/{id}/fases/1/responder',json={'itens':resposta_certa(a,id,1)})
         assert repetir.json()['progresso']['pontos']==300
     assert sum(j['pontos'] for j in a.get('/api/desafios').json())==1500
     assert sum(j['pontos'] for j in b.get('/api/desafios').json())==0
@@ -97,9 +116,9 @@ def test_tentativa_errada_nao_desbloqueia_e_nao_fabrica_pontos():
     a,_=conta('a@example.com')
     endpoint='/api/desafios/phishing/fases/1/responder'
     assert a.post(endpoint,json={'itens':['invalido']}).status_code==422
-    errada=a.post(endpoint,json={'itens':['0']}).json()
+    errada=a.post(endpoint,json={'itens':resposta_errada(a,'phishing',1)}).json()
     assert not errada['acertou'] and errada['progresso']['proxima']==1
-    certa=a.post(endpoint,json={'itens':JOGOS['phishing']['fases'][0]['correta']}).json()
+    certa=a.post(endpoint,json={'itens':resposta_certa(a,'phishing',1)}).json()
     assert certa['pontos_fase']==85 and certa['progresso']['proxima']==2
     assert a.post('/api/desafios/phishing/fases/2/responder',json={'itens':['0','0','1','2']}).status_code==422
 

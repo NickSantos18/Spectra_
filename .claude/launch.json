@@ -10,11 +10,47 @@
         "spectra_link_guard.web.app:app",
         "--port",
         "8000",
-        "--reload"
+        "--reload",
+        "--env-file",
+        ".env"
       ],
       "port": 8000,
       "env": {
         "SPECTRA_SEGREDO": "dev-local-nao-usar-em-producao-troque-esta-chave"
+      }
+    },
+    {
+      "name": "spectra-web-8001",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "spectra_link_guard.web.app:app",
+        "--port",
+        "8001",
+        "--reload"
+      ],
+      "port": 8001,
+      "env": {
+        "SPECTRA_SEGREDO": "dev-local-nao-usar-em-producao-troque-esta-chave",
+        "SPECTRA_BD": "dados/conferencia.db"
+      }
+    },
+    {
+      "name": "spectra-web-8002",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "spectra_link_guard.web.app:app",
+        "--port",
+        "8002",
+        "--reload"
+      ],
+      "port": 8002,
+      "env": {
+        "SPECTRA_SEGREDO": "dev-local-nao-usar-em-producao-troque-esta-chave",
+        "SPECTRA_BD": "dados/assistente.db"
       }
     }
   ]

@@ -133,6 +133,34 @@ def test_ip_literal():
     assert "host_ip_literal" in codigos("http://192.0.2.10/boleto")
 
 
+# Formas que o navegador converte em IPv4 (WHATWG URL): hexadecimal, decimal
+# inteiro, octal e abreviada. Valores conferidos à mão.
+@pytest.mark.parametrize(
+    "url, ip_real",
+    [
+        ("http://0x7f000001/", "127.0.0.1"),
+        ("http://2130706433/", "127.0.0.1"),
+        ("http://0177.0.0.1/", "127.0.0.1"),
+        ("http://127.1/", "127.0.0.1"),
+        ("http://0xd83ad6ce/banco", "216.58.214.206"),
+        ("http://3627733710/login", "216.58.210.206"),
+        ("http://0xC0.0xA8.1.1/", "192.168.1.1"),
+    ],
+)
+def test_ip_disfarcado_e_reconhecido(url, ip_real):
+    a = achado(url, "host_ip_literal")
+    assert a is not None
+    assert a.evidencia["ip"] == ip_real
+    ctx = normalizar(url)
+    assert ctx.e_ip and ctx.host_ascii == ip_real and ctx.dominio_registravel == ""
+
+
+@pytest.mark.parametrize("url", ["http://site2024.com.br/", "http://123abc.com/", "http://0x.com/", "http://1password.com/"])
+def test_dominio_com_numeros_nao_vira_ip(url):
+    assert "host_ip_literal" not in codigos(url)
+    assert normalizar(url).e_ip is False
+
+
 def test_esquema_perigoso_interrompe_analise():
     encontrados = codigos("javascript:alert(document.cookie)")
     assert encontrados == {"esquema_perigoso"}

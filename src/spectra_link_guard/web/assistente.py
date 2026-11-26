@@ -3,10 +3,10 @@
 * ``inicio`` — o balão da porta de entrada: tira dúvidas sobre o Spectra.
 * ``laudo``  — o copiloto do painel: conversa sobre o laudo que está na tela.
 
-As respostas vêm do Claude, em streaming. Sem a biblioteca ``anthropic`` ou
-sem chave no ambiente, ``disponivel()`` devolve falso, a rota responde 503 e o
-navegador volta às respostas por regra que já existiam — o site nunca fica sem
-chat.
+As respostas vêm em streaming do Groq, se ``GROQ_API_KEY`` existir, ou do
+Claude. Sem nenhum dos dois, ``disponivel()`` devolve falso, a rota responde 503
+e o navegador volta às respostas por regra que já existiam — o site nunca fica
+sem chat.
 
 O laudo chega do navegador e contém texto que o dono do link controla (host,
 caminho, títulos). Ele entra no prompt marcado como dado, nunca como instrução,
@@ -21,14 +21,23 @@ import os
 from collections.abc import AsyncIterator
 from typing import Any, Literal
 
+import httpx
+
 try:
     import anthropic
 except ImportError:  # pragma: no cover - depende do extra instalado
     anthropic = None
 
-#: Trocável por SPECTRA_IA_MODELO. O fallback do servidor só vale no padrão.
-MODELO_PADRAO = "claude-opus-5"
+#: Trocável por SPECTRA_IA_MODELO.
+MODELO_PADRAO = "claude-opus-5-5"
 _BETA_FALLBACK = "server-side-fallback-2026-07-01"
+#: Só estes aceitam o fallback do servidor; o Haiku não tem essa opção.
+_MODELOS_COM_FALLBACK = {"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
+
+URL_GROQ = "https://api.groq.com/openai/v1/chat/completions"
+#: Também trocável por SPECTRA_IA_MODELO. O raciocínio conta no limite de saída.
+MODELO_GROQ = "openai/gpt-oss-120b"
+MAX_SAIDA_GROQ = 2000
 
 #: Quanto da conversa volta para o modelo a cada pergunta.
 MAX_MENSAGENS = 16
@@ -63,10 +72,12 @@ página, não invade, não faz varredura de portas nem testa senhas.
 alto, crítico) e a lista de sinais encontrados, cada um com explicação e \
 recomendação. A nota é a soma auditável dos sinais, sem caixa-preta.
 - Telas do painel: Verificar (o laudo e o copiloto), Visão geral (números e \
-gráficos das suas análises), Histórico (busca, filtro, excluir uma ou todas) e \
+gráficos das suas análises), Histórico (busca, filtro, excluir uma ou todas), \
+Explorar (comunidade: feed, publicações, conexões, conversas e desafios), Blog e \
 Aprender (como reconhecer phishing e ler uma URL, com glossário).
-- Acessibilidade: tema claro/escuro, ajuste de fonte, alto contraste, opção de \
-desligar animações e navegação completa por teclado.
+- Acessibilidade: o tema claro/escuro troca no botão de sol e lua, no canto \
+superior direito. Em Configurações ficam o ajuste de fonte, o alto contraste e a \
+opção de desligar animações. Há navegação completa por teclado.
 - Conta: "Cadastrar-se" pede nome, e-mail e senha e já entra direto. Também \
 dá para entrar com Google quando o servidor tiver isso configurado. Para senha \
 esquecida, há o link "Esqueci minha senha" na janela Entrar; se o e-mail não \
@@ -100,12 +111,20 @@ class IndisponivelError(RuntimeError):
     """O assistente com IA não está configurado neste servidor."""
 
 
+def _chave_groq() -> str:
+    return os.environ.get("GROQ_API_KEY", "").strip()
+
+
 def disponivel() -> bool:
-    """Há biblioteca e credencial para falar com o Claude?
+    """Há credencial para falar com o Groq ou com o Claude?
 
     ``SPECTRA_IA=0`` desliga de propósito (e volta às respostas por regra).
     """
-    if anthropic is None or os.environ.get("SPECTRA_IA", "1") == "0":
+    if os.environ.get("SPECTRA_IA", "1") == "0":
+        return False
+    if _chave_groq():
+        return True
+    if anthropic is None:
         return False
     return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
 
@@ -158,6 +177,49 @@ def montar_sistema(contexto: Contexto, laudo: dict[str, Any] | None) -> list[dic
     return blocos
 
 
+async def _responder_groq(
+    sistema: list[dict[str, Any]],
+    mensagens: list[dict[str, str]],
+) -> AsyncIterator[str]:
+    """Mesmo contrato do Claude, pela API do Groq compatível com a da OpenAI.
+
+    A documentação não descreve os pedaços do streaming por inteiro: só lemos
+    ``delta.content`` e tratamos erro no fluxo ou fim sem ``[DONE]`` como falha.
+    """
+    corpo = {
+        "model": os.environ.get("SPECTRA_IA_MODELO", MODELO_GROQ),
+        "messages": [
+            {"role": "system", "content": "\n\n".join(bloco["text"] for bloco in sistema)},
+            *mensagens,
+        ],
+        "stream": True,
+        "max_completion_tokens": MAX_SAIDA_GROQ,
+        "reasoning_effort": "low",
+        "include_reasoning": False,
+    }
+    cabecalhos = {"Authorization": f"Bearer {_chave_groq()}"}
+    async with httpx.AsyncClient(timeout=60.0) as cliente:
+        async with cliente.stream("POST", URL_GROQ, json=corpo, headers=cabecalhos) as resposta:
+            if resposta.status_code != 200:
+                raise RuntimeError(f"Groq respondeu {resposta.status_code}")
+            async for linha in resposta.aiter_lines():
+                if not linha.startswith("data:"):
+                    continue
+                dados = linha.removeprefix("data:").strip()
+                if dados == "[DONE]":
+                    return
+                evento = json.loads(dados)
+                if "error" in evento:
+                    raise RuntimeError("Groq interrompeu a resposta")
+                for escolha in evento.get("choices") or []:
+                    pedaco = (escolha.get("delta") or {}).get("content")
+                    if pedaco:
+                        yield pedaco
+                    if escolha.get("finish_reason") == "length":
+                        yield "…"
+    raise RuntimeError("A resposta do Groq terminou sem [DONE]")
+
+
 async def responder(
     contexto: Contexto,
     historico: list[dict[str, str]],
@@ -171,9 +233,14 @@ async def responder(
     if not mensagens:
         return
 
+    if _chave_groq():
+        async for pedaco in _responder_groq(montar_sistema(contexto, laudo), mensagens):
+            yield pedaco
+        return
+
     modelo = os.environ.get("SPECTRA_IA_MODELO", MODELO_PADRAO)
     extras: dict[str, Any] = {}
-    if modelo == MODELO_PADRAO:
+    if modelo in _MODELOS_COM_FALLBACK:
         # Se o filtro de segurança do modelo recusar (falso positivo é comum em
         # conversa sobre golpe e phishing), o servidor refaz em outro modelo.
         extras = {"betas": [_BETA_FALLBACK], "fallbacks": "default"}

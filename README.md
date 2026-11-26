@@ -5,9 +5,32 @@ Recebe uma URL e devolve um laudo explicando, em português simples, por que
 aquele endereço apresenta sinais de risco e quais verificações foram possíveis.
 O resultado não comprova, sozinho, que um site seja seguro.
 
-## Alterações desta atualização — 25/10/2026
+## Alterações — 29/10/2026
 
-- **Perfil interativo:** a foto parte do botão superior e se transforma em cadeado no centro da área de conteúdo. A pessoa arrasta a chave para abrir o perfil; a barra lateral continua disponível. Há suporte a toque, teclado, cancelamento e movimento reduzido. A sequência visual foi preservada durante a etapa de segurança.
+Administração e comunidade (plano em `docs/superpowers/plans/2026-10-29-admin-blog-curtidas.md`):
+
+- **Admin master e admins:** o master nasce pelo terminal (`python -m spectra_link_guard.admin master seu@email.com`) e promove ou rebaixa admins na página `/admin`. Detalhes em [docs/comunidade.md](docs/comunidade.md).
+- **Página `/admin`:** acessos de hoje, pessoas diferentes, contas novas, curtidas e comentários; gráficos de crescimento diário e de acessos por horário (logados x visitantes), contados sem IP nem cookie de rastreamento; publicação de blog e avisos; registro de ações.
+- **Comunidade:** curtir e comentar em todas as publicações, sininho de notificações, avisos importantes fixados no topo e selo de admin. O blog é dos admins; os convites de especialistas saíram.
+
+Correções dos erros achados no teste exploratório (regressões em `tests/test_correcoes_qa.py`):
+
+- **IP disfarçado:** `0x7f000001`, `2130706433`, `0177.0.0.1` e `127.1` são lidos como o navegador lê (127.0.0.1) e recebem o mesmo risco de um IP comum; o laudo mostra o IP real.
+- **Mensagens de validação:** campos recusados pelo servidor viram uma frase em português (`{"erro": "..."}`), em vez de `[object Object]` na tela.
+- **Layout:** títulos de publicação sem espaços quebram a linha e não alargam a página no celular.
+- **Chat:** posição fora do intervalo responde 422, não erro 500.
+- **Desafios:** os itens usam códigos opacos por pessoa e fase; ordenar pelo código não revela a resposta.
+- **Cabeçalhos:** a proteção HTTP mantém cabeçalhos repetidos (vários `Set-Cookie`); o retorno do Google volta a apagar o cookie temporário.
+- **Página 404:** endereços inexistentes mostram uma página do site, sem repetir o endereço digitado; a API responde JSON com `erro`.
+- **Limites de acesso:** só senhas erradas contam (8 por conta e 30 por IP em 10 minutos) e só contas criadas contam no cadastro (40 por IP por hora), para uma turma na mesma rede não se bloquear.
+- **Perfil:** o cadeado foi removido; voltou o voo da foto do botão superior até o avatar do perfil.
+- **Conexões:** "Conversar" virou ícone, e todo membro tem o quadro "Seu alcance" (seguidores, seguindo, curtidas recebidas e gráfico de 30 dias, via `GET /api/alcance`).
+- **Configurações:** a acessibilidade (fonte, contraste e movimento) abre pelo item Configurações da barra lateral (no celular, em Mais; nas páginas sem barra lateral, pelo rodapé). O botão flutuante arrastável foi removido.
+- **Tema:** o botão de sol e lua fica no canto superior direito de todas as páginas. O escuro é o padrão; o claro só vale por escolha da pessoa, sem seguir o sistema.
+
+## Alterações — 25/10/2026
+
+- **Perfil interativo:** cadeado com chave para abrir o perfil (substituído em 29/10/2026 pelo voo da foto).
 - **Autenticação:** senhas novas usam Argon2id; hashes scrypt anteriores são migrados no login correto. Sessões têm limite absoluto de 30 dias, e cookies malformados são recusados sem derrubar a API.
 - **Login com Google:** integração com código de autorização, PKCE, nonce e validação do ID token pelo SDK oficial. Contas existentes exigem vínculo explícito pelo próprio perfil, após login recente e com o mesmo e-mail.
 - **Confirmação e recuperação:** links de uso único, validade de 20 minutos e tokens armazenados por hash. Redefinir a senha encerra as sessões anteriores.
@@ -20,7 +43,7 @@ O resultado não comprova, sozinho, que um site seja seguro.
 
 Documentação complementar: [ativar Google e SMTP](docs/CONFIGURAR-GOOGLE.md), [correções, testes e limites conhecidos](docs/SEGURANCA-APLICADA.md), [perfil e comunidade](docs/comunidade.md) e [próximas verificações de links](docs/pericia-links-proximos-passos.md).
 
-**Validação em 25/10/2026:** 273 testes Python e nove testes JavaScript aprovados.
+**Validação em 29/10/2026:** 335 testes Python, nove testes JavaScript e os oito modos de `scripts/verificar_explorar.cjs` aprovados.
 A suíte Python emite uma advertência de depreciação do TestClient/HTTPX, sem falhas.
 
 ---
@@ -112,12 +135,15 @@ Sem chave, o provedor devolve `nao_configurado` e a análise segue com as etapas
 1 e 2. As chaves nunca aparecem no relatório nem em log.
 
 Assistente com IA (opcional — os dois chats, o da página inicial e o copiloto
-do laudo, passam a responder com o Claude, em streaming e lembrando a conversa):
+do laudo, passam a responder com IA, em streaming e lembrando a conversa). O
+caminho gratuito é o Groq: crie a chave em https://console.groq.com/keys e
+salve como `GROQ_API_KEY` no `.env`. Essa chave tem prioridade. Para usar o
+Claude, que é pago, deixe ela vazia:
 
 ```bash
 pip install -e ".[web,ia]"
 export ANTHROPIC_API_KEY=...
-export SPECTRA_IA_MODELO=claude-opus-5   # opcional; este é o padrão
+export SPECTRA_IA_MODELO=claude-opus-5-5 # opcional; este é o padrão
 export SPECTRA_IA=0                      # opcional; desliga a IA mesmo com chave
 ```
 

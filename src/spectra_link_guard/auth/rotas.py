@@ -17,13 +17,10 @@ from __future__ import annotations
 import asyncio
 import os
 import sqlite3
-import time
 import hmac
 from datetime import datetime,timezone
 from threading import BoundedSemaphore
 from urllib.parse import urlsplit
-from collections import deque
-from threading import Lock
 from typing import Any
 
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response, BackgroundTasks
@@ -46,40 +43,13 @@ async def trabalho_senha(funcao,*args):
     try: return await asyncio.to_thread(funcao,*args)
     finally: _SENHAS.release()
 
-#: Tentativas de login por IP antes de travar, e por quanto tempo.
-_MAX_TENTATIVAS = 8
-_JANELA_S = 600.0
-
-
-class _Freio:
-    """Limita tentativas de login por IP. Janela deslizante em memória."""
-
-    def __init__(self) -> None:
-        self._por_ip: dict[str, deque[float]] = {}
-        self._trava = Lock()
-
-    def permitido(self, ip: str) -> bool:
-        agora = time.monotonic()
-        with self._trava:
-            marcas = self._por_ip.setdefault(ip, deque())
-            while marcas and agora - marcas[0] > _JANELA_S:
-                marcas.popleft()
-            if len(marcas) >= _MAX_TENTATIVAS:
-                return False
-            marcas.append(agora)
-            return True
-
-    def liberar(self, ip: str) -> None:
-        """Login bem-sucedido zera o contador daquele IP."""
-        with self._trava:
-            self._por_ip.pop(ip, None)
-
-
-freio = _Freio()
-
-
-def _ip(request: Request) -> str:
-    return request.client.host if request.client else "desconhecido"
+#: Só senhas erradas contam, para um aluno errando não bloquear a turma que
+#: sai pelo mesmo IP da escola. O limite por conta segura a força bruta.
+LOGIN_ERROS_POR_CONTA = 8
+LOGIN_ERROS_POR_IP = 30
+JANELA_LOGIN_S = 600
+#: Contas criadas (ou e-mails já existentes) por IP; dados inválidos não contam.
+CADASTROS_POR_HORA = 40
 
 
 def _gravar_sessao(resposta: Response, sessao_id: str) -> None:
@@ -119,15 +89,19 @@ class PedidoLogin(BaseModel):
 
 
 @router.post("/api/auth/cadastrar", status_code=201, summary="Cria uma conta")
-async def cadastrar(pedido: PedidoCadastro, resposta: Response) -> dict[str, Any]:
+async def cadastrar(pedido: PedidoCadastro, request: Request, resposta: Response) -> dict[str, Any]:
     if len(pedido.nome.strip())<3: raise HTTPException(422,'Informe seu nome.')
+    await asyncio.to_thread(protecao.verificar, request, 'cadastro', CADASTROS_POR_HORA, 3600)
     senha_hash = await trabalho_senha(seguranca.gerar_hash, pedido.senha)
     try:
         usuario = await asyncio.to_thread(
             bd.criar_usuario, nome=pedido.nome, email=pedido.email, senha_hash=senha_hash
         )
     except sqlite3.IntegrityError:
+        # E-mail repetido também conta: sem isso a rota listaria contas existentes à vontade.
+        await asyncio.to_thread(protecao.registrar, request, 'cadastro')
         raise HTTPException(status_code=409, detail="Já existe uma conta com este e-mail.")
+    await asyncio.to_thread(protecao.registrar, request, 'cadastro')
 
     sessao = await asyncio.to_thread(bd.abrir_sessao, usuario["id"])
     _gravar_sessao(resposta, sessao)
@@ -137,27 +111,24 @@ async def cadastrar(pedido: PedidoCadastro, resposta: Response) -> dict[str, Any
 
 @router.post("/api/auth/entrar", summary="Entra com e-mail e senha")
 async def entrar(pedido: PedidoLogin, request: Request, resposta: Response) -> dict[str, Any]:
-    ip = _ip(request)
-    await asyncio.to_thread(protecao.limitar,request,'login-ip',8,600)
-    await asyncio.to_thread(protecao.limitar,request,'login-conta',20,600,conta=str(pedido.email).lower())
-    if not freio.permitido(ip):
-        raise HTTPException(
-            status_code=429,
-            detail="Muitas tentativas. Espere alguns minutos antes de tentar de novo.",
-        )
+    conta = str(pedido.email).lower()
+    # Confere os limites antes da senha; só a tentativa errada é registrada depois.
+    await asyncio.to_thread(protecao.verificar, request, 'login-erro-ip', LOGIN_ERROS_POR_IP, JANELA_LOGIN_S)
+    await asyncio.to_thread(protecao.verificar, request, 'login-erro-conta', LOGIN_ERROS_POR_CONTA, JANELA_LOGIN_S, conta=conta)
 
     usuario = await asyncio.to_thread(bd.buscar_por_email, pedido.email)
     confere = await trabalho_senha(
         seguranca.conferir_senha, pedido.senha, usuario["senha_hash"] if usuario else None
     )
     if not usuario or not confere:
+        await asyncio.to_thread(protecao.registrar, request, 'login-erro-ip')
+        await asyncio.to_thread(protecao.registrar, request, 'login-erro-conta', conta=conta)
         # Mesma mensagem nos dois casos, de propósito.
         raise HTTPException(status_code=401, detail="E-mail ou senha não conferem.")
     if seguranca.precisa_atualizar(usuario['senha_hash']):
         novo=await trabalho_senha(seguranca.gerar_hash,pedido.senha)
         await asyncio.to_thread(bd.atualizar_senha,usuario['id'],novo)
 
-    freio.liberar(ip)
     sessao = await asyncio.to_thread(bd.abrir_sessao, usuario["id"])
     _gravar_sessao(resposta, sessao)
     await asyncio.to_thread(bd.marcar_acesso, usuario["id"])

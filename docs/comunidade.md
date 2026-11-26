@@ -22,15 +22,15 @@ O avatar ao lado do nome no menu é quadrado, inclusive após salvar a foto. O e
 
 O perfil possui um fundo exclusivo `energia-perfil`: ondas em camadas, feixes e pulsos nas laterais, com anéis decorativos ao redor da foto. As cinco páginas da comunidade carregam as mesmas famílias de fontes do painel (Hanken Grotesk, Inter e JetBrains Mono) e usam cartões, campos, botões e balões com cantos retos. Fotos e avatares permanecem circulares. As regras ficam concentradas em `comunidade.css`, sem sobrescritas de cartões no arquivo de identidade.
 
-A navegação lateral segue: Verificar, Visão Geral, Histórico, Explorar, Blog, Fórum e Aprender. Conversas fica na navegação interna do Explorar. No celular, os três primeiros ficam na barra rápida e os demais aparecem nessa ordem em Mais. O perfil foi removido do menu lateral e do Mais.
+A navegação lateral segue: Verificar, Visão Geral, Histórico, Explorar, Blog e Aprender. As publicações do fórum ficam no Explorar, e o endereço antigo `/painel/forum` redireciona para `/painel/explorar`. Conversas fica na navegação interna do Explorar. No celular, os três primeiros ficam na barra rápida e os demais aparecem nessa ordem em Mais. O perfil foi removido do menu lateral e do Mais.
 
-Nome e foto da conta aparecem no canto superior direito para membros autenticados. Ao abrir o próprio perfil, a foto parte da posição real desse botão e desliza suavemente até o centro da área de conteúdo, onde se transforma em cadeado. Essa abertura dura um segundo. A barra lateral permanece visível e utilizável; no celular, a barra de navegação inferior também fica disponível. A cena mostra apenas o cadeado, a chave, a explicação e Cancelar, com espaçamento organizado em uma composição central. A pessoa arrasta a chave até a fechadura, com mouse ou toque; a espera é livre. Depois do encaixe, a chave entra e gira, o cadeado se desfaz em fragmentos e o perfil aparece. São três segundos de efeitos ao todo, além do tempo de interação e do carregamento da página. Somente um marcador visual com instante e versão atravessa a navegação em sessionStorage, sem transportar dados de perfil. A chegada tem um limite de espera para evitar tela presa em falha de carregamento.
+Nome e foto da conta aparecem no canto superior direito das páginas para quem está autenticado, junto ao botão de sair. Ao entrar no próprio perfil, esse acesso desaparece do topo e somente Sair permanece. A foto fica quadrada em repouso; ao clicar, arredonda por 360 ms, o nome desaparece e o círculo se desloca e aumenta por 1.250 ms até ocupar exatamente o avatar grande do formulário. A página não é expandida nem recortada. A posição final é medida depois que os dados e a foto do perfil foram carregados. Nos navegadores com View Transitions entre documentos, a captura da tela anterior permanece visível durante o percurso; formulário, moldura e fundo do perfil entram juntos nos últimos 450 ms. Avatar e inicial têm superfícies próprias, animadas apenas com transform, para evitar letras sobrepostas ou mudanças de tamanho no encaixe. O fundo é desenhado antes da captura e seu relógio pausa durante o voo, retomando da mesma posição. Coordenadas, instante e os dados do próprio perfil recém-consultados na API autenticada passam por sessionStorage e são removidos ao abrir a página de destino; HTML não é transportado. O perfil é preenchido antes da captura para evitar uma tela vazia. Sem suporte nativo, mantém-se o deslocamento local com formulário aparecendo na chegada e encaixe de 140 ms. Movimento reduzido desativa o efeito e abrir em outra aba mantém o comportamento normal do link. Em perfis de outros membros, o acesso ao próprio perfil continua no topo.
 
 ## Explorar: feed, mídia, conexões e jogos
 
-A cena de perfil respeita a preferência resolvida por movimento.js. Movimento reduzido leva diretamente ao perfil. Com teclado ou toque, também é possível selecionar a chave e depois ativar o cadeado, sem arrastar. Cancelar ou Escape volta à página de origem com foco no acesso ao perfil. A navegação lateral pode ser usada para sair da cena. Cliques com modificadores conservam a abertura normal em outra aba. O cadeado é apenas um efeito de navegação e não substitui autenticação ou autorização.
+A decisão de movimento é a resolvida por `movimento.js`: a preferência explícita do site prevalece sobre a preferência do sistema. Se o efeito estiver desligado ao clicar, o perfil oferece Ativar e visualizar, que usa o controle existente e repete a entrada a partir da última posição conhecida do botão. O deslocamento usa uma animação local da foto, sem depender das transições nativas entre documentos.
 
-A navegação interna tem Feed, Publicar, Conexões, Conversas e Desafios. O endereço `/painel/explorar` abre o feed; os demais destinos usam `#publicar`, `#conexoes`, `#conversas` e `#desafios`. O endereço antigo `/painel/chat` redireciona para `/painel/explorar#conversas`. O formulário de postagem aparece apenas na aba Publicar. Nas páginas Blog e Fórum o formulário existente continua disponível.
+A navegação interna tem Feed, Publicar, Conexões, Conversas e Desafios. O endereço `/painel/explorar` abre o feed; os demais destinos usam `#publicar`, `#conexoes`, `#conversas` e `#desafios`. O endereço antigo `/painel/chat` redireciona para `/painel/explorar#conversas`. O formulário de postagem aparece apenas na aba Publicar. Na página Blog o formulário existente continua disponível.
 
 As listas Seguindo e Seguidores são privadas para o dono da sessão, sem e-mails ou IPs. São servidas por `/api/conexoes/seguindo` e `/api/conexoes/seguidores`. Perfis e ações de seguir continuam disponíveis nos cartões do feed.
 
@@ -44,18 +44,29 @@ Os cinco jogos são Investigue o phishing, Proteja uma conta, Reconstrua o incid
 
 Para testes no navegador, `node scripts/verificar_explorar.cjs` usa Edge headless com banco, contas e perfil isolados dentro de `.pytest_tmp_browser`. Ele verifica feed inicial, publicação com foto, navegação, jogos e adaptação ao celular, sem modificar contas reais. Os limites por arquivo não substituem os limites de armazenamento, backup e upload necessários ao hospedar o aplicativo.
 
-## Editores e convites
+## Administração, blog e avisos
 
-Defina `SPECTRA_EDITOR_EMAILS` no ambiente do processo com os e-mails autorizados, separados por vírgula, e reinicie o servidor. Não há editor autorizado por padrão. O sistema lê variáveis de ambiente; copiar `.env.example` por si só não as carrega.
+Os papéis ficam no banco (tabela `papeis`), não em variáveis de ambiente:
 
-No PowerShell, antes de iniciar:
+- **Admin master:** concedido só pelo terminal do servidor. Promove e rebaixa admins pela página `/admin`; ninguém tira o master pelo site.
+- **Admin:** publica no blog e avisos importantes, edita e fixa essas publicações, exclui publicações de qualquer pessoa e vê os gráficos e o registro de ações.
+- **Membro:** publica no fórum e no Explorar, curte e comenta.
+
+Para virar master, cadastre-se no site e rode, com o mesmo `SPECTRA_BD` do servidor:
 
 ```powershell
-$env:SPECTRA_EDITOR_EMAILS = 'seu-email@example.com'
-.\.venv\Scripts\python.exe -m uvicorn spectra_link_guard.web.app:app --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m spectra_link_guard.admin master seu-email@example.com
+.\.venv\Scripts\python.exe -m spectra_link_guard.admin listar
+.\.venv\Scripts\python.exe -m spectra_link_guard.admin remover-master seu-email@example.com
 ```
 
-Ao entrar com esse e-mail, o blog exibe o formulário de convite. O editor gera um link e o compartilha com o especialista. O aplicativo não envia e-mail. O link vale sete dias, só pode ser aceito uma vez e exige uma sessão com o e-mail convidado. O acesso concedido permite publicar artigos. Convites são armazenados como hashes, sem o token original.
+O comando também marca o e-mail como confirmado. Promover ou rebaixar admins pelo site exige ter entrado há no máximo 30 minutos; a lista de contas mostra se o e-mail está confirmado. Quem não é admin e abre `/admin` vai para o painel (ou para a entrada, sem sessão), e as rotas `/api/admin/*` respondem 404.
+
+A página `/admin` tem quatro abas: **Visão geral** (acessos de hoje, pessoas diferentes, contas novas, curtidas e comentários; crescimento diário de 30 dias; acessos por horário com média de 7 dias, separando logados e visitantes), **Blog e avisos**, **Admins** (só master) e **Registro de ações**. Os acessos são contados em `web/acessos.py` sem IP nem cookie de rastreamento: cada visitante vira um código derivado de um sal aleatório do dia, apagado no dia seguinte. Ficam 90 dias de histórico; horários em UTC−3.
+
+Um **aviso importante** nasce fixado e aparece numa faixa no topo do conteúdo de todas as páginas para quem está logado, até um admin desafixar. Todas as publicações têm curtir e comentar. O sininho na barra da conta avisa quem publicou sobre curtidas e comentários, e avisa quem já comentou quando chega um comentário novo na mesma publicação. Abrir o sininho marca tudo como lido.
+
+`SPECTRA_EDITOR_EMAILS`, `SPECTRA_EDITOR_IDS` e os convites de especialistas foram removidos em 29/10/2026; essas variáveis não dão mais nenhum privilégio.
 
 ## Google
 
@@ -63,7 +74,7 @@ O botão compartilhado acima das abas de login e cadastro usa o OAuth existente.
 
 O fluxo agora usa PKCE, nonce e contextos de uso único; a identidade vem de ID token validado pelo SDK oficial. Um e-mail igual ao de uma conta existente não cria vínculo automaticamente: entre por senha e use Conectar Google no próprio perfil, até dez minutos após entrar. O Google precisa confirmar o mesmo e-mail. O passo a passo está em [CONFIGURAR-GOOGLE.md](CONFIGURAR-GOOGLE.md).
 
-Privilégios de editor e aceite de convite exigem e-mail verificado. Para liberar uma conta existente, confirme o e-mail por SMTP configurado ou conecte explicitamente a conta Google correspondente. Não marque e-mails como verificados sem comprovar sua titularidade. Prefira configurar editores por `SPECTRA_EDITOR_IDS`.
+Para confirmar o e-mail de uma conta existente, use o SMTP configurado ou conecte explicitamente a conta Google correspondente. Não marque e-mails como verificados sem comprovar sua titularidade. Prefira configurar editores por `SPECTRA_EDITOR_IDS`.
 
 ## Verificação
 

@@ -121,6 +121,10 @@ async def ciclo_de_vida(_: FastAPI):
     bd_auth.preparar()
     protecao_auth.validar_configuracao()
     bd_auth.limpar_sessoes_vencidas()
+    # Sem shell na hospedagem e sem disco persistente, o admin precisa nascer
+    # a cada subida; sem as variáveis de ambiente, isto não faz nada.
+    from .. import admin as _admin
+    _admin.semear_do_ambiente()
     yield
 
 

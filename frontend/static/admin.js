@@ -179,8 +179,15 @@
   async function enviarCapa() {
     const arquivo = $("pub-capa").files[0];
     if (!arquivo) return [];
-    if (!["image/png", "image/jpeg", "image/webp"].includes(arquivo.type)) throw Error("Use uma capa PNG, JPEG ou WebP.");
-    if (arquivo.size > 10 * 1024 * 1024) throw Error("A capa pode ter no máximo 10 MB.");
+    // Os mesmos tipos e limites que o servidor aplica em /api/midias: a checagem
+    // aqui é só para avisar antes do envio, não substitui a validação de lá.
+    const imagens = ["image/png", "image/jpeg", "image/webp"];
+    const videos = ["video/mp4", "video/webm"];
+    if (![...imagens, ...videos].includes(arquivo.type))
+      throw Error("Use PNG, JPEG ou WebP para imagem, ou MP4 ou WebM para vídeo.");
+    const limiteMB = videos.includes(arquivo.type) ? 40 : 10;
+    if (arquivo.size > limiteMB * 1024 * 1024)
+      throw Error(`A capa pode ter no máximo ${limiteMB} MB.`);
     const r = await fetch("/api/midias", { method: "POST", headers: { "Content-Type": arquivo.type }, body: arquivo });
     const d = await r.json();
     if (!r.ok) throw Error(d.erro || "Não foi possível enviar a capa.");

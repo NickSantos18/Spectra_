@@ -54,3 +54,46 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(main(sys.argv[1:]))
+
+
+def semear_do_ambiente() -> str | None:
+    """Garante o admin master a partir de SPECTRA_ADMIN_EMAIL e SPECTRA_ADMIN_SENHA.
+
+    Existe porque o plano gratuito do Render não dá acesso ao shell, então o
+    comando ``python -m spectra_link_guard.admin master`` fica inalcançável.
+    E porque, sem disco persistente, o banco é recriado a cada deploy: rodando
+    na subida do servidor, esta função devolve o admin toda vez, sem intervenção.
+
+    Idempotente: se a conta já existe, só confere o papel; se já é master, não
+    faz nada. Sem as duas variáveis, não faz nada — é um recurso opcional.
+
+    Devolve o e-mail promovido, ou None se não havia o que fazer.
+    """
+    import os
+    import sqlite3
+
+    from .auth import seguranca
+
+    email = (os.getenv("SPECTRA_ADMIN_EMAIL") or "").strip()
+    senha = os.getenv("SPECTRA_ADMIN_SENHA") or ""
+    if not email or not senha:
+        return None
+
+    usuario = bd.buscar_por_email(email)
+    if usuario is None:
+        try:
+            usuario = bd.criar_usuario(
+                nome=(os.getenv("SPECTRA_ADMIN_NOME") or "Administração").strip(),
+                email=email,
+                senha_hash=seguranca.gerar_hash(senha),
+                email_verificado=True,
+            )
+        except sqlite3.IntegrityError:
+            # corrida entre dois processos subindo juntos: o outro criou primeiro
+            usuario = bd.buscar_por_email(email)
+            if usuario is None:
+                return None
+
+    if papeis.papel(usuario["id"]) != "master":
+        papeis.definir(usuario["id"], "master", por="semeadura")
+    return usuario["email"]

@@ -18,6 +18,21 @@
   const executar = fn => async evento => {if(evento)evento.preventDefault();try{await fn(evento);}catch(e){aviso(e.message,true);}};
   function horario(data){return new Date(data).toLocaleString('pt-BR');}
   function linkPerfil(id,nome){const a=no('a',nome);a.href='/painel/perfil?usuario='+encodeURIComponent(id);return a;}
+  // Cabeçalho de autoria: avatar, nome e bio na mesma linha, como numa rede social.
+  // Sem foto, cai na inicial do nome; sem bio, a linha some em vez de ficar vazia.
+  function autoria(id,nome,foto,bio,quando){
+    const a=no('a',undefined,'autoria');
+    a.href='/painel/perfil?usuario='+encodeURIComponent(id);
+    const av=no('span',undefined,'autoria-avatar');
+    if(foto){const img=no('img');img.src=foto;img.alt='';av.append(img);}
+    else av.textContent=(nome||'?').trim().slice(0,1).toUpperCase();
+    const txt=no('span',undefined,'autoria-texto');
+    txt.append(no('strong',nome,'autoria-nome'));
+    if(bio)txt.append(no('span',bio,'autoria-bio'));
+    if(quando)txt.append(no('span',quando,'autoria-quando'));
+    a.append(av,txt);
+    return a;
+  }
   function estadoSeguir(id,seguindo){document.querySelectorAll('[data-seguir]').forEach(b=>{if(b.dataset.seguir===id){b.textContent=seguindo?'Seguindo':'Seguir';b.setAttribute('aria-pressed',String(seguindo));}});}
   function preview(){el('foto-preview').hidden=!foto;el('foto-inicial').hidden=!!foto;el('foto-preview').src=foto;el('ajustar-foto').hidden=!foto;el('foto-inicial').textContent=el('nome').value.trim().slice(0,1).toUpperCase();window.dispatchEvent(new Event('spectra:perfil-pronto'));}
   async function iniciar(){
@@ -125,7 +140,7 @@
       const curtir=no('button',`♥ ${p.curtidas||0}`,'botao-curtir');curtir.type='button';curtir.dataset.curtir=p.id;curtir.setAttribute('aria-pressed',String(!!p.curtiu));curtir.setAttribute('aria-label',`Curtir: ${p.curtidas||0} curtida(s)`);
       curtir.onclick=executar(async()=>{curtir.disabled=true;try{const d=await api(`/api/publicacoes/${p.id}/curtida`,curtir.getAttribute('aria-pressed')==='true'?'DELETE':'POST');curtir.textContent=`♥ ${d.curtidas}`;curtir.setAttribute('aria-pressed',String(d.curtido));curtir.setAttribute('aria-label',`Curtir: ${d.curtidas} curtida(s)`);}finally{curtir.disabled=false;}});
       const abrir=no('button',`Comentários (${p.respostas})`);abrir.type='button';acoes.append(curtir,abrir);const area=no('div',undefined,'respostas');area.hidden=true;
-      async function comentarios(){area.replaceChildren();const rs=await api(`/api/publicacoes/${p.id}/respostas`);if(!rs.length)area.append(no('p','Seja a primeira pessoa a comentar.'));for(const r of rs){const box=no('div',undefined,'resposta');box.append(linkPerfil(r.autor,r.autor_nome),no('p',r.texto),no('small',horario(r.criado_em)));area.append(box);}const form=no('form',undefined,'social-form');const label=no('label','Seu comentário');const campo=no('textarea');campo.id='resposta-'+p.id;label.htmlFor=campo.id;campo.required=true;campo.maxLength=4000;campo.rows=3;const enviar=no('button','Comentar');form.append(label,campo,enviar);form.addEventListener('submit',executar(async()=>{enviar.disabled=true;try{await api(`/api/publicacoes/${p.id}/respostas`,'POST',{texto:campo.value});p.respostas++;abrir.textContent=`Comentários (${p.respostas})`;await comentarios();}finally{enviar.disabled=false;}}));area.append(form);}
+      async function comentarios(){area.replaceChildren();const rs=await api(`/api/publicacoes/${p.id}/respostas`);if(!rs.length)area.append(no('p','Seja a primeira pessoa a comentar.'));for(const r of rs){const box=no('div',undefined,'resposta');box.append(autoria(r.autor,r.autor_nome,r.autor_foto,r.autor_bio,horario(r.criado_em)),no('p',r.texto));area.append(box);}const form=no('form',undefined,'social-form');const label=no('label','Seu comentário');const campo=no('textarea');campo.id='resposta-'+p.id;label.htmlFor=campo.id;campo.required=true;campo.maxLength=4000;campo.rows=3;const enviar=no('button','Comentar');form.append(label,campo,enviar);form.addEventListener('submit',executar(async()=>{enviar.disabled=true;try{await api(`/api/publicacoes/${p.id}/respostas`,'POST',{texto:campo.value});p.respostas++;abrir.textContent=`Comentários (${p.respostas})`;await comentarios();}finally{enviar.disabled=false;}}));area.append(form);}
       abrir.onclick=executar(async()=>{area.hidden=!area.hidden;abrir.setAttribute('aria-expanded',String(!area.hidden));if(!area.hidden)await comentarios();});abrir.setAttribute('aria-expanded','false');
       if(p.autor===eu.id||eu.admin){const excluir=no('button','Excluir publicação');excluir.type='button';excluir.onclick=executar(async()=>{if(!confirm('Excluir esta publicação e seus comentários?'))return;await api('/api/publicacoes/'+p.id,'DELETE');await publicacoes();});acoes.append(excluir);}
       card.append(acoes,area);el('lista-publicacoes').append(card);

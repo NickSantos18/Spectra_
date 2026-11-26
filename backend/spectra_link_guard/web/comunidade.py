@@ -222,7 +222,7 @@ def publicar(tipo: str, p: Publicacao, request: Request):
 def respostas(identificador: str, request: Request):
     exigir(request)
     with bd.conexao() as con:
-        rows = con.execute("SELECT r.*,u.nome AS autor_nome FROM respostas r JOIN usuarios u ON u.id=r.autor WHERE publicacao=? ORDER BY r.id LIMIT 200", (identificador,)).fetchall()
+        rows = con.execute("SELECT r.*,u.nome AS autor_nome,COALESCE(pf.foto,'') AS autor_foto,COALESCE(pf.bio,'') AS autor_bio FROM respostas r JOIN usuarios u ON u.id=r.autor LEFT JOIN perfis pf ON pf.usuario_id=r.autor WHERE publicacao=? ORDER BY r.id LIMIT 200", (identificador,)).fetchall()
     return [dict(r) for r in rows]
 
 

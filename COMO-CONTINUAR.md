@@ -82,15 +82,15 @@ fundação visual, que veio depois:
 
 | O quê | Onde |
 |---|---|
-| Motor de análise (sintaxe, TLS, reputação, RDAP/DNS) | `src/spectra_link_guard/*.py` |
-| Checklist heurística (itens 7/8) | `src/spectra_link_guard/sintaxe.py` → `checklist_heuristico()` |
-| Rotas e páginas | `src/spectra_link_guard/web/app.py` |
-| Telas (HTML) | `src/spectra_link_guard/web/static/*.html` |
-| Estilo compartilhado (cursor, fundo da página, rodapé, botão e painel de acessibilidade) | `src/spectra_link_guard/web/static/rodape.css` |
-| Acessibilidade (tema/fonte/contraste/arrastar) | `src/spectra_link_guard/web/static/acessibilidade.js` |
-| Cores (todas), tema claro e alto contraste | `src/spectra_link_guard/web/static/tokens.css` |
-| Menu, rodapé e acessibilidade (um lugar só) | `src/spectra_link_guard/web/parciais/` |
-| Histórico por usuário e estatísticas | `src/spectra_link_guard/web/analises.py` |
+| Motor de análise (sintaxe, TLS, reputação, RDAP/DNS) | `backend/spectra_link_guard/*.py` |
+| Checklist heurística (itens 7/8) | `backend/spectra_link_guard/sintaxe.py` → `checklist_heuristico()` |
+| Rotas e páginas | `backend/spectra_link_guard/web/app.py` |
+| Telas (HTML) | `frontend/static/*.html` |
+| Estilo compartilhado (cursor, fundo da página, rodapé, botão e painel de acessibilidade) | `frontend/static/rodape.css` |
+| Acessibilidade (tema/fonte/contraste/arrastar) | `frontend/static/acessibilidade.js` |
+| Cores (todas), tema claro e alto contraste | `frontend/static/tokens.css` |
+| Menu, rodapé e acessibilidade (um lugar só) | `frontend/parciais/` |
+| Histórico por usuário e estatísticas | `backend/spectra_link_guard/web/analises.py` |
 
 ## 6. Pendente / em aberto
 

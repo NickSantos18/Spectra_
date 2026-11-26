@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname, '../src/spectra_link_guard/web/static/foto-editor.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../static/foto-editor.js'), 'utf8');
 
 function ambiente() {
   const desenhos = [];

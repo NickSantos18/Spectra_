@@ -42,7 +42,7 @@ page('Visão geral do projeto', [
     ('O que este documento apresenta', 'Inventário das linguagens, bibliotecas, protocolos, integrações e ferramentas identificadas no código do Spectra Link Guard. Cada tecnologia é relacionada ao seu uso e aos arquivos que comprovam sua presença.'),
     ('Arquitetura', 'Navegador (HTML, CSS e JavaScript) > requisições HTTP/JSON > aplicação FastAPI em Python > banco SQLite e serviços externos. Uvicorn executa a aplicação ASGI. O analisador de links também pode ser utilizado por linha de comando.'),
     ('Como interpretar as versões', 'pyproject.toml define versões mínimas e grupos opcionais. requirements-lock.txt fixa versões de um ambiente validado em 24/10/2026. package.json fixa ferramentas de estilos. Essas declarações não comprovam a versão instalada nem que um serviço externo esteja habilitado.'),
-    ('Fontes utilizadas', 'pyproject.toml; package.json; requirements-lock.txt; tailwind.config.cjs; código em src/spectra_link_guard; testes em tests; automações em scripts. O levantamento usa o repositório local, sem consultar dados de usuários ou credenciais.'),
+    ('Fontes utilizadas', 'pyproject.toml; package.json; requirements-lock.txt; tailwind.config.cjs; código em backend/spectra_link_guard; testes em tests; automações em scripts. O levantamento usa o repositório local, sem consultar dados de usuários ou credenciais.'),
     ('Mapa de leitura', 'Páginas seguintes: backend e dados; interface; segurança e identidade; integrações; ferramentas e testes; dependências fixadas e módulos nativos. Componentes opcionais e arquivos legados são identificados separadamente.'),
 ])
 page('Backend e armazenamento', [

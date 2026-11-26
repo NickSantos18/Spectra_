@@ -45,7 +45,10 @@ from ..auth import protecao as protecao_auth
 from ..auth import papeis
 from threading import BoundedSemaphore
 
-ESTATICOS = Path(__file__).parent / "static"
+#: O front mora fora do pacote, em frontend/. O caminho sobe de
+#: backend/spectra_link_guard/web/ até a raiz do repositório.
+RAIZ_REPO = Path(__file__).resolve().parents[3]
+ESTATICOS = RAIZ_REPO / "frontend" / "static"
 
 #: Ativos que toda página carrega; entram no cache-busting de _pagina().
 _ATIVOS_BASE = (
@@ -59,7 +62,7 @@ _ATIVOS_PAINEL = _ATIVOS_BASE + ("laudo.css", "menu.js")
 
 #: Partes de HTML compartilhadas, encaixadas por _pagina() no lugar de
 #: <!--PARCIAL:nome-->. Ficam fora de static/: não são servidas sozinhas.
-PARCIAIS = Path(__file__).parent / "parciais"
+PARCIAIS = RAIZ_REPO / "frontend" / "parciais"
 _MARCADOR_PARCIAL = re.compile(r"<!--PARCIAL:([a-z-]+)-->")
 
 #: Limite por IP: a análise consome cota de APIs de terceiros e abre uma

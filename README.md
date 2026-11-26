@@ -277,7 +277,7 @@ Sai com código `1` quando o nível é `atencao` ou pior — útil em scripts.
 ## Arquitetura
 
 ```
-src/spectra_link_guard/
+backend/spectra_link_guard/
 ├── models.py       dataclasses do relatório (Achado, CertificadoTLS, ...)
 ├── dados.py        listas curadas: marcas, sufixos, TLDs, homóglifos, iscas
 ├── sintaxe.py      etapa 1 — análise da string, 100% offline

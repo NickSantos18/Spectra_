@@ -11,7 +11,7 @@ function ambiente(entrada=false){
   const ouvir=(nome,fn)=>(eventos[nome]??=[]).push(fn);
   const document={documentElement:root,hidden:false,readyState:'complete',querySelectorAll:()=>[canvas],addEventListener:ouvir};
   const window={devicePixelRatio:1,matchMedia:()=>({matches:false}),addEventListener:ouvir};
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/spectra_link_guard/web/static/fundo.js'),'utf8'),{window,document,Math,getComputedStyle:()=>({getPropertyValue:()=> '17 142 148'}),requestAnimationFrame:cb=>{frames.set(++id,cb);return id;},cancelAnimationFrame:i=>frames.delete(i),ResizeObserver:class{constructor(cb){this.cb=cb;}observe(){this.cb();}},IntersectionObserver:class{constructor(cb){this.cb=cb;}observe(){this.cb([{isIntersecting:true}]);}}});
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../static/fundo.js'),'utf8'),{window,document,Math,getComputedStyle:()=>({getPropertyValue:()=> '17 142 148'}),requestAnimationFrame:cb=>{frames.set(++id,cb);return id;},cancelAnimationFrame:i=>frames.delete(i),ResizeObserver:class{constructor(cb){this.cb=cb;}observe(){this.cb();}},IntersectionObserver:class{constructor(cb){this.cb=cb;}observe(){this.cb([{isIntersecting:true}]);}}});
   return {root,document,classes,frames,posicoes:()=>elipses.slice(-8),emitir:n=>(eventos[n]||[]).forEach(fn=>fn()),quadro:t=>{const lista=[...frames.values()];frames.clear();lista.forEach(cb=>cb(t));return desenhos;}};
 }
 

@@ -23,10 +23,7 @@ dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 spectra-link-guard = "spectra_link_guard.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-"spectra_link_guard.web" = ["static/*", "parciais/*"]
+where = ["backend"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

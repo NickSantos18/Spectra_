@@ -3,7 +3,7 @@
   // "base": uma cor chamada base colide com o utilitário de tamanho text-base.
   const token = (nome) => `rgb(var(--${nome}-rgb) / <alpha-value>)`;
   module.exports = {
-    content: ['./src/spectra_link_guard/web/static/*.{html,js}', './src/spectra_link_guard/web/parciais/*.html'],
+    content: ['./static/*.{html,js}', './parciais/*.html'],
     plugins: [require('@tailwindcss/forms')],
     theme: {
       extend: {

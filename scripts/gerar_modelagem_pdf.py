@@ -10,7 +10,7 @@ OUT = ROOT / 'docs' / 'modelagem'
 OUT.mkdir(parents=True, exist_ok=True)
 con = sqlite3.connect(':memory:')
 for name in ('auth/bd.py', 'web/analises.py', 'web/comunidade.py'):
-    tree = ast.parse((ROOT/'src/spectra_link_guard'/name).read_text(encoding='utf-8'))
+    tree = ast.parse((ROOT/'backend/spectra_link_guard'/name).read_text(encoding='utf-8'))
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str) and 'CREATE TABLE IF NOT EXISTS' in node.value:
             con.executescript(node.value)
@@ -139,7 +139,7 @@ p.text(618,y+3,'Observações do modelo atual',12,TEAL,True)
 y=p.para(618,y+29,'O IP mostrado no perfil vem da conexão HTTP e não é uma coluna do banco. Explorar é uma consulta de publicações, não uma tabela. O chat não tem tabela de conversas: os participantes são inferidos de remetente e destinatário.',86,10)+12
 y=p.para(618,y,'Os e-mails dos editores são definidos por SPECTRA_EDITOR_EMAILS, fora do banco. A autorização para conversar depende de existir uma relação de seguidores em algum sentido.',86,10)+12
 y=p.para(618,y,'Exclusões: FKs com CASCADE removem filhos automaticamente. O autor de publicacoes e respostas usa NO ACTION: esses vínculos podem impedir a exclusão da conta enquanto houver conteúdo associado.',86,10)+12
-p.para(618,y,'Fontes: src/spectra_link_guard/auth/bd.py; web/analises.py; web/comunidade.py. Documento gerado a partir do esquema no código, sem leitura dos registros do banco local.',86,9)
+p.para(618,y,'Fontes: backend/spectra_link_guard/auth/bd.py; web/analises.py; web/comunidade.py. Documento gerado a partir do esquema no código, sem leitura dos registros do banco local.',86,9)
 pages.append(p)
 
 # PDF vetorial: texto selecionável, fontes padrão e desenhos em coordenadas PDF.

@@ -53,13 +53,13 @@
   .inicio-identidade .inicio-logo{width:78vw;max-width:340px}
   .inicio-apresentacao-conteudo{padding:56px 24px}
   .inicio-apresentacao #manchete{font-size:min(clamp(2.35rem,10.4vw,3.6rem),7svh);letter-spacing:-.015em;line-height:1.14}
-  .inicio-sobretitulo{font-size:.56rem;margin-bottom:20px;letter-spacing:.18em}
+  .inicio-sobretitulo{font-size:.72rem;margin-bottom:20px;letter-spacing:.14em}
   .inicio-resumo{font-size:.87rem;line-height:1.7;margin-top:22px}
   .inicio-acoes{flex-direction:column;gap:10px;margin-top:24px}
   .inicio-botao{min-height:48px;justify-content:center;gap:24px}
-  .inicio-nota{font-size:.5rem;margin-top:18px}
-  .inicio-indice{top:24px;right:64px;font-size:.5rem}
-  .inicio-rolar{font-size:.5rem;gap:10px}
+  .inicio-nota{font-size:.72rem;letter-spacing:.12em;margin-top:18px}
+  .inicio-indice{top:24px;right:64px;font-size:.68rem}
+  .inicio-rolar{font-size:.7rem;gap:10px;min-height:44px}
   .inicio-traco{display:none}
   :root[data-inicio-rolagem="on"] .inicio-indice{top:24px}
   :root[data-inicio-rolagem="on"] .inicio-rolar{bottom:24px;left:50%;transform:translateX(-50%)}

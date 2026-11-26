@@ -101,6 +101,12 @@ body::before {
   /* A marca ocupa a linha inteira; as listas dividem a de baixo. */
   .rodape-conteudo > :first-child { grid-column: 1 / -1; }
 }
+@media (max-width: 720px) {
+  /* No celular o rótulo de coluna caía para menos de 10px e o botão de
+     configuração ficava abaixo do alvo de toque mínimo de 44px. */
+  .rodape-titulo-coluna { font-size: .72rem; letter-spacing: .1em; }
+  .rodape-config { min-height: 44px; }
+}
 @media (max-width: 400px) {
   .rodape-conteudo { gap: 14px; padding: 22px 14px 18px; }
 }

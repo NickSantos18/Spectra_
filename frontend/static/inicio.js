@@ -569,17 +569,6 @@ if (motivo && MOTIVOS[motivo]) {
   if (motivo === "entre_primeiro") abrirModal("entrar");
 }
 
-// O botão fica visível nas duas abas; sem configuração, informa a indisponibilidade.
-fetch("/api/auth/provedores")
-  .then((r) => r.json())
-  .then(({ google }) => {
-    if (google) return;
-    $("botao-google").setAttribute("aria-disabled", "true");
-    $("botao-google").addEventListener("click", (evento) => evento.preventDefault());
-    $("google-indisponivel").hidden = false;
-  })
-  .catch(() => {});
-
 // Quem já tem sessão não precisa ver a porta de entrada.
 fetch("/api/auth/eu")
   .then((r) => r.json())

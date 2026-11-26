@@ -101,12 +101,6 @@ body::before {
   /* A marca ocupa a linha inteira; as listas dividem a de baixo. */
   .rodape-conteudo > :first-child { grid-column: 1 / -1; }
 }
-@media (max-width: 720px) {
-  /* No celular o rótulo de coluna caía para menos de 10px e o botão de
-     configuração ficava abaixo do alvo de toque mínimo de 44px. */
-  .rodape-titulo-coluna { font-size: .72rem; letter-spacing: .1em; }
-  .rodape-config { min-height: 44px; }
-}
 @media (max-width: 400px) {
   .rodape-conteudo { gap: 14px; padding: 22px 14px 18px; }
 }
@@ -118,11 +112,6 @@ body::before {
   color: var(--texto);
 }
 .rodape-marca svg { width: 16px; height: 16px; color: var(--primaria); }
-.rodape-tagline {
-  margin: 8px 0 0; max-width: 32ch;
-  font-size: .78rem; line-height: 1.6; color: var(--texto-3);
-}
-
 .rodape-titulo-coluna {
   margin: 0 0 10px;
   font-family: var(--fonte-mono, monospace); font-size: .62rem;
@@ -254,4 +243,11 @@ body:has(.trilho) .a11y-caixa { left: calc(var(--trilho-l, 0px) + 12px); }
   /* Alvos de toque de 44px no celular. */
   .rodape-links a, .rodape-contato a { min-height: 44px; }
   .a11y-painel button { min-width: 44px; min-height: 44px; }
+}
+
+/* Ajustes de celular ficam no fim do arquivo de propósito: têm a mesma
+   especificidade das regras base e só vencem por vir depois. */
+@media (max-width: 720px) {
+  .rodape-titulo-coluna { font-size: .72rem; letter-spacing: .1em; }
+  .rodape-config { min-height: 44px; }
 }

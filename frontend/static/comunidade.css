@@ -16,15 +16,30 @@
 .social input:focus,.social textarea:focus{outline:none;border-color:var(--primaria);box-shadow:0 0 0 3px rgb(var(--primaria-rgb) / .18)}
 .social-form{display:flex;flex-direction:column;gap:12px}.social-form>button{align-self:flex-start}
 .perfil-grade{display:grid;grid-template-columns:220px 1fr;gap:32px}
-.foto-controle{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:15px}
+.foto-controle{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;text-align:center}
+.foto-orbita{position:relative;isolation:isolate;display:grid;place-items:center;padding:22px}
+.foto-acoes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.foto-acoes button{min-height:44px}
+.foto-acoes #remover-foto{background:transparent;border-color:var(--linha-forte);color:var(--texto)}
+.foto-controle small{max-width:32ch}
 .avatar-grande{width:150px;height:150px;border-radius:50%;object-fit:cover;background:var(--base-4);display:grid;place-items:center;font-family:var(--fonte-titulo);font-size:3rem;color:var(--primaria-clara)}
 /* Anéis decorativos isolados dos campos; sem flashes ou pulsos bruscos. */
-.foto-controle::before,.foto-controle::after{content:"";position:absolute;pointer-events:none;z-index:-1;border-radius:50%;border:1px solid rgb(var(--primaria-clara-rgb) / .45)}
-.foto-controle::before{width:178px;height:178px;top:-14px;left:calc(50% - 89px);background:repeating-conic-gradient(from 0deg,transparent 0deg 18deg,rgb(var(--primaria-clara-rgb) / .6) 18deg 20deg,transparent 20deg 40deg);mask-image:radial-gradient(circle,transparent 67%,#000 68%,#000 71%,transparent 72%);animation:perfil-orbita 24s linear infinite}
-.foto-controle::after{width:194px;height:194px;top:-22px;left:calc(50% - 97px);border-style:dashed;border-color:rgb(var(--primaria-clara-rgb) / .22);box-shadow:0 0 25px rgb(var(--primaria-rgb) / .15);animation:perfil-orbita 36s linear infinite reverse}
+.foto-orbita::before,.foto-orbita::after{content:"";position:absolute;pointer-events:none;z-index:-1;border-radius:50%;border:1px solid rgb(var(--primaria-clara-rgb) / .45)}
+.foto-orbita::before{inset:8px;background:repeating-conic-gradient(from 0deg,transparent 0deg 18deg,rgb(var(--primaria-clara-rgb) / .6) 18deg 20deg,transparent 20deg 40deg);mask-image:radial-gradient(circle,transparent 67%,#000 68%,#000 71%,transparent 72%);animation:perfil-orbita 24s linear infinite}
+.foto-orbita::after{inset:0;border-style:dashed;border-color:rgb(var(--primaria-clara-rgb) / .22);box-shadow:0 0 25px rgb(var(--primaria-rgb) / .15);animation:perfil-orbita 36s linear infinite reverse}
 @keyframes perfil-orbita{to{transform:rotate(360deg)}}
-:root[data-movimento="off"] .foto-controle::before,:root[data-movimento="off"] .foto-controle::after{animation:none}
-@media(prefers-reduced-motion:reduce){.foto-controle::before,.foto-controle::after{animation:none}}
+:root[data-movimento="off"] .foto-orbita::before,:root[data-movimento="off"] .foto-orbita::after{animation:none}
+@media(max-width:599px),(prefers-reduced-motion:reduce){
+  .foto-orbita::before,.foto-orbita::after{animation:none}
+}
+@media(max-width:599px){
+  .foto-orbita .avatar-grande{width:clamp(110px,38vw,150px);height:clamp(110px,38vw,150px);font-size:clamp(2rem,11vw,3rem)}
+  .perfil-grade{gap:24px}
+}
+@media(max-width:599px) and (prefers-reduced-motion:no-preference){
+  :root[data-movimento="on"] #perfil:not([hidden]) .foto-controle{animation:perfil-foto-entrada .24s ease-out both}
+}
+@keyframes perfil-foto-entrada{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .perfil-dados{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:.82rem}.perfil-dados dt{color:var(--texto-2)}.perfil-dados dd{margin:0;overflow-wrap:anywhere;user-select:text}
 #identificador,#ip,#criado{font-family:var(--fonte-mono);font-size:.76rem}
 .chat-grade{display:grid;grid-template-columns:260px 1fr;gap:20px}

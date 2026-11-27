@@ -38,8 +38,19 @@
 
 <section id="perfil" hidden>
   <form id="form-perfil" class="social-card perfil-grade">
-    <div class="foto-controle"><img id="foto-preview" class="avatar-grande" alt="Sua foto de perfil" hidden><span id="foto-inicial" class="avatar-grande"></span>
-    <button type="button" id="alterar-foto">Alterar foto</button><input id="foto" type="file" accept="image/*" hidden><button type="button" id="ajustar-foto" hidden>Ajustar enquadramento</button><button type="button" id="remover-foto">Remover foto</button><small>Arraste e ajuste o zoom antes de aplicar a foto.</small></div>
+    <div class="foto-controle">
+      <div class="foto-orbita">
+        <img id="foto-preview" class="avatar-grande" alt="Sua foto de perfil" hidden>
+        <span id="foto-inicial" class="avatar-grande"></span>
+      </div>
+      <div class="foto-acoes">
+        <button type="button" id="alterar-foto" aria-describedby="foto-ajuda">Alterar foto</button>
+        <input id="foto" type="file" accept="image/*" hidden>
+        <button type="button" id="ajustar-foto" hidden>Ajustar enquadramento</button>
+        <button type="button" id="remover-foto" hidden>Remover foto</button>
+      </div>
+      <small id="foto-ajuda">Arraste e ajuste o zoom antes de aplicar a foto.</small>
+    </div>
     <div class="social-form"><label for="nome">Nome</label><input id="nome" minlength="3" maxlength="120" required>
     <label for="bio">Sobre você</label><textarea id="bio" maxlength="1000" rows="4" placeholder="Seus interesses em cibersegurança"></textarea>
     <dl class="perfil-dados"><dt>E-mail</dt><dd id="email"></dd><dt>Identificador da conta</dt><dd id="identificador"></dd><dt>IP desta conexão</dt><dd id="ip"></dd><dt>Conta criada em</dt><dd id="criado"></dd></dl>

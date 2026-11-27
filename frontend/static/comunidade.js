@@ -34,7 +34,7 @@
     return a;
   }
   function estadoSeguir(id,seguindo){document.querySelectorAll('[data-seguir]').forEach(b=>{if(b.dataset.seguir===id){b.textContent=seguindo?'Seguindo':'Seguir';b.setAttribute('aria-pressed',String(seguindo));}});}
-  function preview(){el('foto-preview').hidden=!foto;el('foto-inicial').hidden=!!foto;el('foto-preview').src=foto;el('ajustar-foto').hidden=!foto;el('foto-inicial').textContent=el('nome').value.trim().slice(0,1).toUpperCase();window.dispatchEvent(new Event('spectra:perfil-pronto'));}
+  function preview(){el('foto-preview').hidden=!foto;el('foto-inicial').hidden=!!foto;el('foto-preview').src=foto;el('ajustar-foto').hidden=el('remover-foto').hidden=!foto;el('foto-inicial').textContent=el('nome').value.trim().slice(0,1).toUpperCase();window.dispatchEvent(new Event('spectra:perfil-pronto'));}
   async function iniciar(){
     eu=await (window.spectraCarregarPerfil?window.spectraCarregarPerfil():api('/api/perfil'));
     document.title=`${titulos[pagina]} · Spectra`;el('titulo').textContent=titulos[pagina];

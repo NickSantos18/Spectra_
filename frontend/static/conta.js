@@ -4,6 +4,7 @@
   const tempos={arredondar:360,deslocar:1250,formulario:450,encaixar:140};
   // movimento.js já resolve a preferência do sistema e a escolha explícita do usuário.
   const movimento=()=>window.spectraMovimentoLigado?window.spectraMovimentoLigado():root.dataset.movimento!=='off';
+  const perfilCompacto=()=>window.matchMedia('(max-width: 599px)').matches;
   let pendente=null,navegando=false,iniciou=false,transicaoNativa=null;
   let perfilPromise=null;
   window.spectraCarregarPerfil=(atualizar=false)=>{
@@ -15,7 +16,7 @@
   };
   try{pendente=JSON.parse(sessionStorage.getItem(chave)||'null');sessionStorage.removeItem(chave);}catch{}
   if(location.pathname!=='/painel/perfil'||!pendente||Date.now()-pendente.instante>10000||
-    ![pendente.x,pendente.y,pendente.raio,pendente.instante].every(Number.isFinite)||!movimento())pendente=null;
+    ![pendente.x,pendente.y,pendente.raio,pendente.instante].every(Number.isFinite)||!movimento()||perfilCompacto())pendente=null;
   if(pendente?.perfil)perfilPromise=Promise.resolve(pendente.perfil);
 
   function limparEntrada(){
@@ -54,6 +55,7 @@
     if(perfil.foto)foto.src=perfil.foto;
     inicial.textContent=(perfil.nome||'').trim().slice(0,1).toUpperCase();
     document.getElementById('ajustar-foto').hidden=!perfil.foto;
+    document.getElementById('remover-foto').hidden=!perfil.foto;
   }
   async function revelar(){
     if(!pendente||iniciou)return;
@@ -145,7 +147,7 @@
       try{sessionStorage.setItem(avisoChave,'1');}catch{}
       return;
     }
-    if(!Element.prototype.animate)return;
+    if(perfilCompacto()||!Element.prototype.animate)return;
     evento.preventDefault();if(navegando)return;navegando=true;
     const clone=document.createElement('div');clone.className='perfil-morph';clone.setAttribute('aria-hidden','true');
     const estilo=getComputedStyle(avatar);

@@ -45,7 +45,7 @@ body[data-perfil-proprio=true] .conta-acesso{display:none}
 body[data-perfil-proprio=true].com-conta{--conta-reserva:124px}
 html.perfil-avatar-entrada #perfil{opacity:0}
 html.perfil-avatar-voando #foto-preview,html.perfil-avatar-voando #foto-inicial{visibility:hidden}
-html[data-perfil-transicao] .caminho,html[data-perfil-transicao] .foto-controle::before,html[data-perfil-transicao] .foto-controle::after,html[data-perfil-transicao] .rodape-fundo{animation-play-state:paused}
+html[data-perfil-transicao] .caminho,html[data-perfil-transicao] .foto-orbita::before,html[data-perfil-transicao] .foto-orbita::after,html[data-perfil-transicao] .rodape-fundo{animation-play-state:paused}
 .perfil-morph{contain:layout paint style;backface-visibility:hidden;box-shadow:none}
 /* Uma única captura conserva a tela anterior e inclui o fundo do perfil.
    O avatar é a única superfície que se desloca entre os documentos. */

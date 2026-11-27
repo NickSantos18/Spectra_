@@ -76,7 +76,7 @@
 .adm-periodos button:hover{box-shadow:inset 0 0 0 1px var(--primaria-clara)}
 @keyframes adm-entrada{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.adm-apresentacao{align-items:flex-start;flex-direction:column;gap:14px}.adm-quadro .quadro-topo,.adm-quadro .quadro-corpo{padding:16px}.adm-quadro .grafico-alto{height:260px}.adm-kpi{padding:18px 12px}.adm-kpi-rotulo{font-size:.62rem}}
-@media(prefers-reduced-motion:reduce){.admin-pagina .fundo-fixo::after,.adm-kpi{animation:none}.adm-kpi{transition:none}.adm-kpi:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){html:not([data-movimento="on"]) .admin-pagina .fundo-fixo::after,html:not([data-movimento="on"]) .adm-kpi{animation:none}html:not([data-movimento="on"]) .adm-kpi{transition:none;transform:none}}
 html[data-movimento=off] .admin-pagina .fundo-fixo::after,html[data-movimento=off] .adm-kpi{animation:none}
 html[data-movimento=off] .adm-kpi{transition:none}
 html[data-movimento=off] .adm-kpi:hover{transform:none}

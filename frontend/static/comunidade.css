@@ -30,7 +30,8 @@
 @keyframes perfil-orbita{to{transform:rotate(360deg)}}
 :root[data-movimento="off"] .foto-orbita::before,:root[data-movimento="off"] .foto-orbita::after{animation:none}
 @media(prefers-reduced-motion:reduce){
-  .foto-orbita::before,.foto-orbita::after{animation:none}
+  :root:not([data-movimento="on"]) .foto-orbita::before,
+  :root:not([data-movimento="on"]) .foto-orbita::after{animation:none}
 }
 @media(max-width:599px){
   .foto-orbita .avatar-grande{width:clamp(110px,38vw,150px);height:clamp(110px,38vw,150px);font-size:clamp(2rem,11vw,3rem)}

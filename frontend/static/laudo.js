@@ -36,6 +36,10 @@ function gerador(estado) {
   };
 }
 
+const movimentoParado = () => window.spectraMovimentoLigado
+  ? !window.spectraMovimentoLigado()
+  : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 class Poligrafo {
   constructor(canvas) {
     this.canvas = canvas;
@@ -45,14 +49,22 @@ class Poligrafo {
     this.corMarcas = `rgb(${token("texto-rgb")} / .07)`;
     this.harmonicas = this.montarHarmonicas("spectra");
     this.t = 0;
-    this.calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.calmo = movimentoParado();
+    this.quadro = this.quadro.bind(this);
+    this.pedidoQuadro = 0;
 
     this.redimensionar = this.redimensionar.bind(this);
     window.addEventListener("resize", this.redimensionar, { passive: true });
     this.redimensionar();
 
-    if (this.calmo) this.desenhar();
-    else requestAnimationFrame(this.quadro.bind(this));
+    window.addEventListener("spectra:movimento", () => {
+      this.calmo = movimentoParado();
+      cancelAnimationFrame(this.pedidoQuadro);
+      this.pedidoQuadro = 0;
+      if (this.calmo) this.desenhar();
+      else this.pedidoQuadro = requestAnimationFrame(this.quadro);
+    });
+    if (!this.calmo) this.pedidoQuadro = requestAnimationFrame(this.quadro);
   }
 
   montarHarmonicas(texto) {
@@ -87,7 +99,7 @@ class Poligrafo {
   quadro() {
     this.t += 0.0125;
     this.desenhar();
-    requestAnimationFrame(this.quadro.bind(this));
+    this.pedidoQuadro = requestAnimationFrame(this.quadro);
   }
 
   /** Papel milimetrado do instrumento: marcas verticais discretas. */
@@ -662,7 +674,7 @@ async function periciar(url) {
     $("q-amostras").hidden = true;
     $("subnav-analise").hidden = false;
     for (const id of ["q-cadeia", "q-evidencias", "q-sinais", "q-checklist"]) $(id).hidden = false;
-    const calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const calmo = movimentoParado();
     $("q-veredito").scrollIntoView({ behavior: calmo ? "auto" : "smooth", block: "start" });
   } catch (erro) {
     const mensagens = {

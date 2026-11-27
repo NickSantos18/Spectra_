@@ -128,12 +128,9 @@
       atualizarRotulos();
     });
 
-    // O painel abre pelo item "Configurações" (barra lateral, menu Mais do
-    // celular e rodapé das páginas sem barra lateral). Não há mais botão
-    // flutuante arrastável.
-    const painel = document.getElementById("a11y-painel");
+    const painel = host;
     const abridores = [...document.querySelectorAll("[data-abrir-configuracoes]")];
-    if (!painel) return;
+    const botaoTopo = document.querySelector(".config-botao");
     let origem = null;
 
     function abrir(mostrar, gatilho) {
@@ -145,7 +142,8 @@
       painel.hidden = !mostrar;
       abridores.forEach((b) => b.setAttribute("aria-expanded", String(mostrar)));
       if (mostrar) painel.querySelector("button,a")?.focus();
-      else if (origem && origem.offsetParent !== null) origem.focus();
+      else if (origem?.getClientRects().length) origem.focus();
+      else botaoTopo?.focus();
     }
     abridores.forEach((b) => b.addEventListener("click", () => abrir(painel.hidden, b)));
     painel.querySelector("[data-a11y-fechar]")?.addEventListener("click", () => abrir(false));

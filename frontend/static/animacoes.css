@@ -1,7 +1,7 @@
 /* Spectra — micro-interações e transições, compartilhadas por todas as telas.
  *
  * Com movimento parado (`data-movimento="off"`, resolvido por movimento.js a
- * partir do interruptor e do prefers-reduced-motion), nada se mexe e nada
+ * partir do interruptor), nada se mexe e nada
  * fica invisível esperando animação. Só transform, translate e opacity são
  * animados.
  */

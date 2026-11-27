@@ -526,7 +526,7 @@ async def termos() -> HTMLResponse:
 @app.get('/redefinir-senha',include_in_schema=False)
 @app.get('/confirmar-email',include_in_schema=False)
 async def acesso_seguro():
-    return HTMLResponse((ESTATICOS/'acesso-seguro.html').read_text(encoding='utf-8'))
+    return _pagina("acesso-seguro.html", *_ATIVOS_BASE, "acesso-seguro.css", "acesso-seguro.js")
 
 
 @app.get("/v2", include_in_schema=False)

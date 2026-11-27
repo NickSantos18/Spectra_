@@ -1,16 +1,19 @@
 /* Acesso à conta compartilhado por todas as páginas, fora do menu lateral. */
-/* Canto superior: a conta (só com sessão) e o tema (sempre). O tema fica na
-   ponta para não mudar de lugar quando a pessoa entra ou sai. */
-.canto-superior{position:fixed;top:calc(8px + env(safe-area-inset-top));right:calc(14px + env(safe-area-inset-right));z-index:65;display:flex;align-items:center;gap:6px}
+/* As configurações e o tema ficam sempre no canto superior. */
+:root{--controles-topo:calc(8px + env(safe-area-inset-top));--controles-direita:calc(14px + env(safe-area-inset-right));--controle-tamanho:48px}
+.canto-superior{position:fixed;top:var(--controles-topo);right:var(--controles-direita);z-index:65;display:flex;align-items:center;gap:6px}
 .conta-superior{box-sizing:border-box;display:flex;align-items:center;gap:4px;height:48px;padding:4px;background:var(--base-2);border:1px solid var(--linha);color:var(--texto);font-family:"Inter",system-ui,sans-serif}
 .conta-superior[hidden]{display:none!important}
 /* Botão de tema: um único astro. A sombra desliza sobre o disco e faz o
    eclipse que vira lua; ao sair, o disco encolhe e os raios nascem em sequência.
    O estado vem de data-tema, aplicado antes da primeira pintura, então nada
    anima ao abrir a página. */
-.tema-botao{display:grid;place-items:center;flex:none;box-sizing:border-box;width:48px;height:48px;padding:0;border:1px solid var(--linha);border-radius:0;background:var(--base-2);color:var(--astro);cursor:pointer;transition:border-color .2s,color .4s}
+.tema-botao,.config-botao{display:grid;place-items:center;flex:none;box-sizing:border-box;width:var(--controle-tamanho);height:var(--controle-tamanho);padding:0;border:1px solid var(--linha);border-radius:0;background:var(--base-2);color:var(--astro);cursor:pointer;transition:border-color .2s,color .4s}
 .tema-botao:hover{border-color:var(--astro)}
-.tema-botao:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
+.config-botao{color:var(--texto-2)}
+.config-botao:hover,.config-botao[aria-expanded=true]{color:var(--primaria-clara);border-color:var(--primaria-clara)}
+.config-botao svg{width:22px;height:22px}
+.tema-botao:focus-visible,.config-botao:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
 .tema-astro{display:block;width:24px;height:24px;overflow:visible;transition:transform .6s cubic-bezier(.3,1.25,.5,1)}
 .tema-disco,.tema-sombra,.tema-raios path{transform-box:view-box;transform-origin:center}
 .tema-disco,.tema-sombra{transition:transform .5s cubic-bezier(.3,1.25,.5,1)}
@@ -33,7 +36,7 @@
 .conta-acesso:focus-visible,.conta-sair-superior:focus-visible,.conta-icone-superior:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
 .conta-icone-superior{position:relative;display:grid;place-items:center;width:32px;height:36px;border:0;border-left:1px solid var(--linha);background:transparent;color:var(--texto-3);cursor:pointer;text-decoration:none}
 .conta-icone-superior[hidden]{display:none}.conta-icone-superior svg{width:17px;height:17px}.conta-icone-superior:hover,.conta-icone-superior[aria-current=page]{color:var(--primaria-clara)}
-.com-conta{--conta-reserva:394px}
+.com-conta{--conta-reserva:448px}
 .com-conta .corpo>.barra{padding-right:var(--conta-reserva);min-height:64px}
 .com-conta[data-pagina=explorar] .explorar-nav{padding-right:var(--conta-reserva);min-height:64px}
 .com-conta>header{padding-right:var(--conta-reserva);min-height:64px}
@@ -42,7 +45,7 @@
 .perfil-morph>*{width:100%;height:100%;object-fit:cover;display:grid;place-items:center}
 .perfil-morph .perfil-glifo{display:block;width:max-content;height:auto;line-height:1}
 body[data-perfil-proprio=true] .conta-acesso{display:none}
-body[data-perfil-proprio=true].com-conta{--conta-reserva:124px}
+body[data-perfil-proprio=true].com-conta{--conta-reserva:178px}
 html.perfil-avatar-entrada #perfil{opacity:0}
 html.perfil-avatar-voando #foto-preview,html.perfil-avatar-voando #foto-inicial{visibility:hidden}
 html[data-perfil-transicao] .caminho,html[data-perfil-transicao] .foto-orbita::before,html[data-perfil-transicao] .foto-orbita::after,html[data-perfil-transicao] .rodape-fundo{animation-play-state:paused}
@@ -68,11 +71,11 @@ html.perfil-transicao-nativa::view-transition-old(perfil-letra),html.perfil-tran
 .conta-aviso-movimento p{margin:0 0 12px;line-height:1.6}.conta-aviso-movimento button{margin:0 10px 6px 0;padding:10px 12px;background:var(--primaria);color:var(--sobre-primaria);border:1px solid var(--primaria);border-radius:0;cursor:pointer;font:inherit}
 .conta-aviso-movimento button:last-child{background:var(--base-3);color:var(--texto-2);border-color:var(--linha-forte)}
 .conta-aviso-movimento button:focus-visible{outline:2px solid var(--primaria-clara);outline-offset:2px}
-@media(max-width:1050px) and (min-width:600px){.conta-nome-superior{max-width:96px}.com-conta{--conta-reserva:349px}}
+@media(max-width:1050px) and (min-width:600px){.conta-nome-superior{max-width:96px}.com-conta{--conta-reserva:403px}}
 @media(max-width:599px){
-  .canto-superior{top:calc(4px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));gap:4px}
+  :root{--controles-topo:calc(4px + env(safe-area-inset-top));--controles-direita:calc(8px + env(safe-area-inset-right));--controle-tamanho:44px}
+  .canto-superior{gap:4px}
   .conta-superior{height:44px;padding:3px;gap:2px}
-  .tema-botao{width:44px;height:44px}
   .conta-avatar{width:32px;height:32px}.conta-acesso{height:34px;gap:8px;padding-right:4px}.conta-nome-superior{max-width:96px;font-size:.72rem}.conta-sair-superior,.conta-icone-superior{width:30px;height:34px}
   .com-conta .topo-movel{min-height:calc(56px + env(safe-area-inset-top))}
   .com-conta .corpo>.barra{padding-right:var(--vao);min-height:0}

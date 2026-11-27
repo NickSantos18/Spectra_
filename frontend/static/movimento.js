@@ -1,10 +1,7 @@
 /* Interruptor de movimento — carregado antes de tudo, sem `defer`.
  *
- * Por que existe: o padrão do site é respeitar `prefers-reduced-motion`, que é
- * o certo. Só que quem tem "efeitos de animação" desligado no Windows nunca vê
- * o site se mexer e não tem como saber por quê. Este módulo resolve a
- * preferência do sistema num atributo explícito em <html> e deixa a pessoa
- * trocar — a escolha dela vence a do sistema e fica guardada no navegador.
+ * As animações começam ligadas na primeira visita. A pessoa pode desligar
+ * pelas configurações, e a escolha fica guardada no navegador.
  *
  * Roda cedo de propósito: define o atributo antes da primeira pintura, senão
  * a página começa animando e trava um quadro depois.
@@ -13,9 +10,6 @@
 (function () {
   const CHAVE = "spectra:movimento";
   const raiz = document.documentElement;
-
-  const sistemaPrefereParado = () =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function lerEscolha() {
     try {
@@ -37,7 +31,7 @@
   function resolver() {
     const escolha = lerEscolha();
     if (escolha === "on" || escolha === "off") return escolha;
-    return sistemaPrefereParado() ? "off" : "on";
+    return "on";
   }
 
   aplicar(resolver());
@@ -55,8 +49,6 @@
           /* sem armazenamento: vale só para esta página */
         }
         aplicar(novo);
-        // Os efeitos em WebGL leem o estado na inicialização; recarregar é o
-        // jeito honesto de aplicar sem manter dois caminhos de código.
         window.dispatchEvent(new CustomEvent("spectra:movimento", { detail: novo }));
       });
     }

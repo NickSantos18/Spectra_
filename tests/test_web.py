@@ -332,6 +332,17 @@ def test_botao_de_tema_aparece_em_todas_as_telas_do_painel(cliente):
         assert cliente.get(rota).text.count("data-a11y-tema") == 1, rota
 
 
+def test_configuracoes_ficam_junto_do_tema_nas_telas_de_interface(cliente):
+    entrar(cliente)
+    rotas = ["/inicio", "/privacidade", "/termos", "/painel/perfil",
+             "/painel/explorar", "/redefinir-senha", "/confirmar-email", "/nao-existe"]
+    for rota in rotas + [rota for rota, _ in TELAS_DO_PAINEL]:
+        html = cliente.get(rota).text
+        assert html.count('class="config-botao"') == 1, rota
+        assert html.count('id="a11y-painel"') == 1, rota
+        assert html.index('class="canto-superior"') < html.index('class="config-botao"') < html.index('data-a11y-tema'), rota
+
+
 def test_rodape_e_acessibilidade_moram_so_nos_parciais():
     from spectra_link_guard.web.app import ESTATICOS
 

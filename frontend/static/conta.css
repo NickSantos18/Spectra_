@@ -43,7 +43,10 @@
 .perfil-morph .perfil-glifo{display:block;width:max-content;height:auto;line-height:1}
 body[data-perfil-proprio=true] .conta-acesso{display:none}
 body[data-perfil-proprio=true].com-conta{--conta-reserva:124px}
-html.perfil-avatar-entrada #perfil{opacity:0}
+@media(min-width:600px){html.perfil-avatar-entrada #perfil{opacity:0}}
+@media(max-width:599px){
+  html.perfil-avatar-entrada #foto-preview,html.perfil-avatar-entrada #foto-inicial{visibility:hidden}
+}
 html.perfil-avatar-voando #foto-preview,html.perfil-avatar-voando #foto-inicial{visibility:hidden}
 html[data-perfil-transicao] .caminho,html[data-perfil-transicao] .foto-orbita::before,html[data-perfil-transicao] .foto-orbita::after,html[data-perfil-transicao] .rodape-fundo{animation-play-state:paused}
 .perfil-morph{contain:layout paint style;backface-visibility:hidden;box-shadow:none}

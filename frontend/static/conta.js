@@ -39,8 +39,7 @@
   }
   // Os dados vieram da API autenticada na origem. Preencher antes da primeira
   // pintura permite capturar o perfil pronto, em vez de uma página vazia.
-  function prepararPerfil(){
-    const perfil=pendente?.perfil;
+  function prepararPerfil(perfil=pendente?.perfil){
     if(!perfil||!document.getElementById('form-perfil'))return;
     document.getElementById('perfil').hidden=false;
     document.getElementById('titulo').textContent='Perfil';
@@ -56,7 +55,18 @@
     inicial.textContent=(perfil.nome||'').trim().slice(0,1).toUpperCase();
     document.getElementById('ajustar-foto').hidden=!perfil.foto;
     document.getElementById('remover-foto').hidden=!perfil.foto;
+    document.getElementById('confirmar-email').hidden=perfil.email_verificado||!perfil.email_disponivel;
+    document.getElementById('email-estado').textContent=perfil.email_verificado
+      ?'E-mail confirmado.':'Seu e-mail ainda não foi confirmado.';
   }
+  window.spectraPrepararPerfilInicial=()=>{
+    const perfil=JSON.parse(document.getElementById('perfil-inicial').textContent);
+    if(!perfil)return;
+    perfilPromise=Promise.resolve(perfil);
+    if(pendente)pendente.perfil=perfil;
+    prepararPerfil(perfil);
+    if(perfilCompacto()&&pendente)requestAnimationFrame(()=>revelar().catch(limparEntrada));
+  };
   async function revelar(){
     if(!pendente||iniciou)return;
     if(pendente.nativa&&!transicaoNativa&&root.classList.contains('perfil-transicao-nativa'))return;

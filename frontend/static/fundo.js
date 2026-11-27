@@ -184,11 +184,11 @@
     const explorar = tipo === 'explorar', perfil = tipo === 'perfil';
     return {
       iniciar: () => ({}), redimensionar() {},
-      intervaloMs: () => celular() ? 50 : 33,
+      intervaloMs: () => celular() && !perfil ? 50 : 33,
       desenhar(ctx,e,w,h,tempo,cor) {
         ctx.clearRect(0,0,w,h);
         const t=tempo/1000, inicio=celular()?0:236;
-        const area=Math.max(1,w-inicio), quantidade=perfil?(celular()?20:36):(celular()?16:26);
+        const area=Math.max(1,w-inicio), quantidade=perfil?(celular()?14:36):(celular()?16:26);
         // Luz ambiente nas bordas; evita um foco brilhante atrás dos textos.
         for(const lado of [0,1]) {
           const x=inicio+area*lado, y=h*(.4+Math.sin(t*.14+lado*2)*.13);
@@ -326,11 +326,12 @@
       const mudouLargura = novaLargura !== largura;
       largura = novaLargura;
       altura = novaAltura;
-      canvas.width = Math.round(largura * DPR);
-      canvas.height = Math.round(altura * DPR);
+      const escala = canvas.dataset.efeito === "energia-perfil" && celular() ? 1 : DPR;
+      canvas.width = Math.round(largura * escala);
+      canvas.height = Math.round(altura * escala);
       canvas.style.width = `${largura}px`;
       canvas.style.height = `${altura}px`;
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.setTransform(escala, 0, 0, escala, 0, 0);
       efeito.redimensionar(estado, largura, altura, mudouLargura);
       prepararCores();
       // A captura de entrada precisa conter o fundo pronto mesmo com o RAF

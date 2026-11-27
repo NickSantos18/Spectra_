@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Comunidade · Spectra</title>
+<title>__TITULO_COMUNIDADE__ · Spectra</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
 <div class="app">
 <!--PARCIAL:menu-->
 <div class="corpo">
-<header class="barra hist-barra"><h1 id="titulo" class="hist-titulo">Comunidade</h1></header>
+<header class="barra hist-barra"><h1 id="titulo" class="hist-titulo">__TITULO_COMUNIDADE__</h1></header>
 <nav id="explorar-nav" class="explorar-nav" aria-label="Navegação do Explorar" hidden>
   <a href="#feed" data-explorar="feed"><i data-lucide="layout-list" aria-hidden="true"></i><span>Feed</span></a>
   <a href="#publicar" data-explorar="publicar"><i data-lucide="square-pen" aria-hidden="true"></i><span>Publicar</span></a>
@@ -63,6 +63,8 @@
     <p id="google-estado"></p>
   </div>
 </section>
+<script type="application/json" id="perfil-inicial">__DADOS_PERFIL_INICIAL__</script>
+<script>window.spectraPrepararPerfilInicial?.();</script>
 <a id="voltar-explorar" class="voltar-explorar" href="/painel/explorar" data-voltar-explorar hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Voltar para o Explorar</a>
 <section id="perfil-membro" class="social-card membro-grade" hidden aria-labelledby="membro-nome">
   <img id="membro-foto" class="avatar-grande" alt="" hidden><span id="membro-inicial" class="avatar-grande" aria-hidden="true"></span>

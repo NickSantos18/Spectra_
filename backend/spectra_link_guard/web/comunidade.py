@@ -62,10 +62,7 @@ class Perfil(BaseModel):
 
 @router.get("/api/perfil")
 def perfil(request: Request):
-    return dados_perfil(exigir(request), request)
-
-
-def dados_perfil(u, request: Request):
+    u = exigir(request)
     with bd.conexao() as con:
         p = con.execute("SELECT bio, foto FROM perfis WHERE usuario_id = ?", (u["id"],)).fetchone()
     return {**bd.publico(u), **(dict(p) if p else {"bio": "", "foto": ""}),

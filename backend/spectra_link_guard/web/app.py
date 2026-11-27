@@ -17,7 +17,6 @@ por requisição (campo ``offline`` do corpo), mas não é o padrão.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import re
 import time
@@ -396,13 +395,12 @@ async def revalidar_estaticos(request: Request, proximo):
     return resposta
 
 
-def _pagina(arquivo: str, *ativos: str, menu: str | None = None, perfil_inicial: dict[str, Any] | None = None) -> HTMLResponse:
+def _pagina(arquivo: str, *ativos: str, menu: str | None = None, perfil_proprio: bool = False) -> HTMLResponse:
     """Serve uma página: encaixa os parciais, marca o item ativo do menu e
     injeta ?v=<mtime> nos ativos que ela referencia (cache-busting)."""
     html = (ESTATICOS / arquivo).read_text(encoding="utf-8")
     html = html.replace('__PAGINA_COMUNIDADE__', menu or '')
-    html = html.replace('__PERFIL_PROPRIO__', 'true' if perfil_inicial is not None else 'false')
-    html = html.replace('__TITULO_COMUNIDADE__', 'Perfil' if perfil_inicial is not None else 'Comunidade')
+    html = html.replace('__PERFIL_PROPRIO__', 'true' if perfil_proprio else 'false')
     html = html.replace("__FUNDO_COMUNIDADE__", {"perfil": "energia-perfil", "chat": "conversas", "blog": "ondas", "forum": "forum", "explorar": "explorar"}.get(menu, ""))
     html = html.replace("</head>", '<link rel="stylesheet" href="/static/marca-fundo.css?v=' + _carimbo("marca-fundo.css") + '"></head>')
     html = html.replace('</head>', '<link rel="stylesheet" href="/static/conta.css"><script src="/static/conta.js"></script></head>')
@@ -416,11 +414,7 @@ def _pagina(arquivo: str, *ativos: str, menu: str | None = None, perfil_inicial:
     for ativo in ativos:
         html = html.replace(f"/static/{ativo}", f"/static/{ativo}?v={_carimbo(ativo)}")
     if NONCE.get(): html=html.replace('<script',f'<script nonce="{NONCE.get()}"')
-    if perfil_inicial is not None:
-        dados = json.dumps(perfil_inicial).replace("<", r"\u003c")
-        html = html.replace("__DADOS_PERFIL_INICIAL__", dados)
-        return HTMLResponse(html, headers={"Cache-Control": "private, no-store"})
-    return HTMLResponse(html.replace("__DADOS_PERFIL_INICIAL__", "null"))
+    return HTMLResponse(html)
 
 
 def _carimbo(nome: str) -> str:
@@ -497,8 +491,7 @@ async def painel_historico(request: Request) -> Response:
 @app.get("/painel/blog", include_in_schema=False)
 @app.get("/painel/forum", include_in_schema=False)
 async def pagina_comunidade(request: Request) -> Response:
-    usuario = await asyncio.to_thread(usuario_atual, request.cookies.get("spectra_sessao"))
-    if usuario is None:
+    if usuario_atual(request.cookies.get("spectra_sessao")) is None:
         destino = request.url.path
         if request.url.query:
             destino += "?" + request.url.query
@@ -508,14 +501,7 @@ async def pagina_comunidade(request: Request) -> Response:
         return RedirectResponse('/painel/explorar#conversas', status_code=303)
     if request.url.path == '/painel/forum':
         return RedirectResponse('/painel/explorar', status_code=303)
-    perfil_inicial = None
-    if request.url.path == "/painel/perfil" and not request.query_params.get("usuario"):
-        perfil_inicial = await asyncio.to_thread(comunidade.dados_perfil, usuario, request)
-    return _pagina(
-        "comunidade.html", *_ATIVOS_PAINEL, "fundo.js", "foto-editor.js", "explorar.js",
-        "comunidade.js", "comunidade.css", menu=request.url.path.rsplit("/", 1)[-1],
-        perfil_inicial=perfil_inicial,
-    )
+    return _pagina("comunidade.html", *_ATIVOS_PAINEL, "fundo.js", "foto-editor.js", "explorar.js", "comunidade.js", "comunidade.css", menu=request.url.path.rsplit("/", 1)[-1], perfil_proprio=request.url.path=='/painel/perfil' and not request.query_params.get('usuario'))
 
 
 @app.get("/painel/aprender", include_in_schema=False)

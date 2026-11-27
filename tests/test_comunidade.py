@@ -90,24 +90,6 @@ def test_paginas_exigem_login():
     assert 'data-menu="forum"' not in r.text
 
 
-def test_perfil_inicial_e_privado_e_seguro_para_incorporar_no_html():
-    a, aid = conta('a@example.com')
-    b, _ = conta('b@example.com')
-    bio = '</script><span>Texto de teste</span>'
-    assert a.put('/api/perfil', json={'nome': 'Pessoa Teste', 'bio': bio}).status_code == 200
-
-    resposta = a.get('/painel/perfil')
-    assert 'no-store' in resposta.headers['cache-control']
-    assert '<title>Perfil · Spectra</title>' in resposta.text
-    assert bio not in resposta.text
-    assert r"\u003c/script>" in resposta.text
-    assert 'a@example.com' in resposta.text
-
-    visitado = b.get('/painel/perfil', params={'usuario': aid})
-    assert 'a@example.com' not in visitado.text
-    assert r"\u003c/script>" not in visitado.text
-
-
 def test_explorar_agrega_posts_e_estado_seguindo():
     autor, aid = conta('editor@example.com')
     papeis.definir(aid, 'admin', 'teste')

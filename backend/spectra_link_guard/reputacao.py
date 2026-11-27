@@ -68,6 +68,19 @@ def _chave(provedor: str, url: str) -> str:
 # --------------------------------------------------------------------------- #
 
 
+def _erro_provedor(provedor: str, erro: Exception) -> ResultadoReputacao:
+    # Exceções HTTP podem conter URLs com chaves ou identificadores de consultas.
+    if isinstance(erro, httpx.HTTPStatusError):
+        mensagem = f"O provedor respondeu com HTTP {erro.response.status_code}."
+    elif isinstance(erro, httpx.TimeoutException):
+        mensagem = "A consulta ao provedor excedeu o tempo limite."
+    elif isinstance(erro, ValueError):
+        mensagem = "O provedor devolveu uma resposta inválida."
+    else:
+        mensagem = "Não foi possível se comunicar com o provedor."
+    return ResultadoReputacao(provedor, StatusReputacao.ERRO, mensagem=mensagem)
+
+
 async def consultar_google_safe_browsing(
     cliente: httpx.AsyncClient, url: str, chave_api: str | None
 ) -> ResultadoReputacao:
@@ -99,8 +112,8 @@ async def consultar_google_safe_browsing(
         resp = await cliente.post(_GSB_URL, params={"key": chave_api}, json=corpo)
         resp.raise_for_status()
         dados = resp.json()
-    except httpx.HTTPError as exc:
-        return ResultadoReputacao(provedor, StatusReputacao.ERRO, mensagem=str(exc))
+    except (httpx.HTTPError, ValueError) as exc:
+        return _erro_provedor(provedor, exc)
 
     ocorrencias = dados.get("matches") or []
     if not ocorrencias:
@@ -153,7 +166,7 @@ async def consultar_virustotal(
         resp.raise_for_status()
         atributos = resp.json()["data"]["attributes"]
     except (httpx.HTTPError, KeyError, ValueError) as exc:
-        return ResultadoReputacao(provedor, StatusReputacao.ERRO, mensagem=str(exc))
+        return _erro_provedor(provedor, exc)
 
     estatisticas = atributos.get("last_analysis_stats", {}) or {}
     maliciosos = int(estatisticas.get("malicious", 0))
@@ -203,7 +216,7 @@ async def consultar_phishtank(
         resp.raise_for_status()
         resultado = resp.json().get("results", {})
     except (httpx.HTTPError, ValueError) as exc:
-        return ResultadoReputacao(provedor, StatusReputacao.ERRO, mensagem=str(exc))
+        return _erro_provedor(provedor, exc)
 
     if not resultado.get("in_database"):
         return ResultadoReputacao(

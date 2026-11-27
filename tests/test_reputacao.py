@@ -59,9 +59,14 @@ def test_gsb_url_limpa():
     assert r.status is StatusReputacao.LIMPO
 
 
-def test_gsb_erro_http_vira_status_erro():
-    r = rodar(_chamar(lambda req: httpx.Response(500), consultar_google_safe_browsing))
+def test_gsb_erro_http_vira_status_erro_sem_revelar_chave():
+    def negar(req):
+        assert req.url.params["key"]
+        return httpx.Response(403, text=str(req.url))
+
+    r = rodar(_chamar(negar, consultar_google_safe_browsing))
     assert r.status is StatusReputacao.ERRO
+    assert r.mensagem == "O provedor respondeu com HTTP 403."
 
 
 # --------------------------------------------------------------------------- #

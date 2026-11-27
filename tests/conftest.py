@@ -12,7 +12,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def sem_credenciais_de_ia(monkeypatch):
     """Nenhum teste fala com uma API real, mesmo com chave no ambiente de quem roda."""
-    for nome in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GROQ_API_KEY"):
+    for nome in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GROQ_API_KEY", "GEMINI_API_KEY"):
         monkeypatch.delenv(nome, raising=False)
 
 

@@ -347,3 +347,49 @@ def test_resposta_cortada_pelo_limite_termina_com_reticencias(cliente, groq):
     _, responder_com = groq
     responder_com(httpx.Response(200, content=_fluxo(_texto("Texto longo", "length"), "[DONE]")))
     assert cliente.post("/api/assistente", json={"historico": PERGUNTA}).text == "Texto longo…"
+
+def _evento_gemini(partes, fim=None):
+    candidato = {"content": {"parts": partes}}
+    if fim:
+        candidato["finishReason"] = fim
+    return {"candidates": [candidato]}
+
+
+def test_gemini_tem_prioridade_e_transmite_so_texto_visivel(cliente, groq, monkeypatch):
+    pedidos, responder_com = groq
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-gemini-de-teste")
+    monkeypatch.setenv("SPECTRA_GEMINI_MODELO", "gemini-teste")
+    responder_com(httpx.Response(200, content=_fluxo(
+        _evento_gemini([{"text": "Oculto", "thought": True}, {"text": "Olá, "}]),
+        _evento_gemini([{"text": "tudo certo."}], "STOP"),
+    )))
+    historico = PERGUNTA + [
+        {"papel": "assistente", "texto": "Olá!"},
+        {"papel": "usuario", "texto": "Como funciona?"},
+    ]
+
+    resp = cliente.post("/api/assistente", json={"historico": historico})
+
+    assert resp.status_code == 200
+    assert resp.text == "Olá, tudo certo."
+    pedido, = pedidos
+    assert pedido.url.host == "generativelanguage.googleapis.com"
+    assert pedido.url.path == "/v1beta/models/gemini-teste:streamGenerateContent"
+    assert dict(pedido.url.params) == {"alt": "sse"}
+    assert pedido.headers["x-goog-api-key"] == "chave-gemini-de-teste"
+    corpo = json.loads(pedido.content)
+    assert "Spectra" in corpo["systemInstruction"]["parts"][0]["text"]
+    assert [item["role"] for item in corpo["contents"]] == ["user", "model", "user"]
+    assert corpo["contents"][-1]["parts"] == [{"text": "Como funciona?"}]
+
+
+def test_erro_do_gemini_preserva_o_contrato_da_rota(cliente, groq, monkeypatch, caplog):
+    _, responder_com = groq
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-gemini-de-teste")
+    responder_com(httpx.Response(429, text="chave-gemini-de-teste"))
+
+    resp = cliente.post("/api/assistente", json={"historico": PERGUNTA})
+
+    assert resp.status_code == 502
+    assert "chave-gemini-de-teste" not in resp.text
+    assert "chave-gemini-de-teste" not in caplog.text

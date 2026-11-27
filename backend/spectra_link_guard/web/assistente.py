@@ -3,8 +3,8 @@
 * ``inicio`` — o balão da porta de entrada: tira dúvidas sobre o Spectra.
 * ``laudo``  — o copiloto do painel: conversa sobre o laudo que está na tela.
 
-As respostas vêm em streaming do Groq, se ``GROQ_API_KEY`` existir, ou do
-Claude. Sem nenhum dos dois, ``disponivel()`` devolve falso, a rota responde 503
+As respostas vêm em streaming do Gemini, do Groq ou do Claude, nessa ordem
+de preferência. Sem credenciais, ``disponivel()`` devolve falso, a rota responde 503
 e o navegador volta às respostas por regra que já existiam — o site nunca fica
 sem chat.
 
@@ -33,6 +33,8 @@ MODELO_PADRAO = "claude-opus-5-5"
 _BETA_FALLBACK = "server-side-fallback-2026-07-01"
 #: Só estes aceitam o fallback do servidor; o Haiku não tem essa opção.
 _MODELOS_COM_FALLBACK = {"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
+
+MODELO_GEMINI = "gemini-3.8-flash"
 
 URL_GROQ = "https://api.groq.com/openai/v1/chat/completions"
 #: Também trocável por SPECTRA_IA_MODELO. O raciocínio conta no limite de saída.
@@ -111,18 +113,22 @@ class IndisponivelError(RuntimeError):
     """O assistente com IA não está configurado neste servidor."""
 
 
+def _chave_gemini() -> str:
+    return os.environ.get("GEMINI_API_KEY", "").strip()
+
+
 def _chave_groq() -> str:
     return os.environ.get("GROQ_API_KEY", "").strip()
 
 
 def disponivel() -> bool:
-    """Há credencial para falar com o Groq ou com o Claude?
+    """Há um provedor de IA configurado?
 
     ``SPECTRA_IA=0`` desliga de propósito (e volta às respostas por regra).
     """
     if os.environ.get("SPECTRA_IA", "1") == "0":
         return False
-    if _chave_groq():
+    if _chave_gemini() or _chave_groq():
         return True
     if anthropic is None:
         return False
@@ -175,6 +181,52 @@ def montar_sistema(contexto: Contexto, laudo: dict[str, Any] | None) -> list[dic
             )
         blocos.append({"type": "text", "text": texto})
     return blocos
+
+
+async def _responder_gemini(
+    sistema: list[dict[str, Any]],
+    mensagens: list[dict[str, str]],
+    chave: str,
+) -> AsyncIterator[str]:
+    modelo = os.environ.get("SPECTRA_GEMINI_MODELO", "").strip() or MODELO_GEMINI
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:streamGenerateContent"
+    corpo = {
+        "systemInstruction": {"parts": [{"text": bloco["text"]} for bloco in sistema]},
+        "contents": [
+            {
+                "role": "model" if mensagem["role"] == "assistant" else "user",
+                "parts": [{"text": mensagem["content"]}],
+            }
+            for mensagem in mensagens
+        ],
+        "generationConfig": {"maxOutputTokens": 2048},
+    }
+    async with httpx.AsyncClient(timeout=60.0) as cliente:
+        async with cliente.stream(
+            "POST", url, params={"alt": "sse"}, json=corpo, headers={"x-goog-api-key": chave}
+        ) as resposta:
+            if resposta.status_code != 200:
+                raise RuntimeError(f"Gemini respondeu {resposta.status_code}")
+            async for linha in resposta.aiter_lines():
+                if not linha.startswith("data:"):
+                    continue
+                evento = json.loads(linha.removeprefix("data:").strip())
+                if "error" in evento or (evento.get("promptFeedback") or {}).get("blockReason"):
+                    raise RuntimeError("Gemini interrompeu a resposta")
+                for candidato in evento.get("candidates") or []:
+                    fim = candidato.get("finishReason")
+                    if fim and fim not in ("STOP", "MAX_TOKENS", "FINISH_REASON_UNSPECIFIED"):
+                        raise RuntimeError("Gemini interrompeu a resposta")
+                    for parte in (candidato.get("content") or {}).get("parts") or []:
+                        texto = parte.get("text")
+                        if texto and not parte.get("thought"):
+                            yield texto
+                    if fim == "MAX_TOKENS":
+                        yield "…"
+                        return
+                    if fim == "STOP":
+                        return
+    raise RuntimeError("A resposta do Gemini terminou sem confirmação de conclusão")
 
 
 async def _responder_groq(
@@ -231,6 +283,12 @@ async def responder(
 
     mensagens = montar_mensagens(historico)
     if not mensagens:
+        return
+
+    chave_gemini = _chave_gemini()
+    if chave_gemini:
+        async for pedaco in _responder_gemini(montar_sistema(contexto, laudo), mensagens, chave_gemini):
+            yield pedaco
         return
 
     if _chave_groq():

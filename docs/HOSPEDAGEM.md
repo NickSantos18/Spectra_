@@ -65,7 +65,7 @@ Opcionais, cada uma liga um recurso hoje desligado:
 SPECTRA_GSB_API_KEY=          # Google Safe Browsing
 SPECTRA_VT_API_KEY=           # VirusTotal
 SPECTRA_PHISHTANK_APP_KEY=    # PhishTank
-GROQ_API_KEY=                 # assistente de IA (ou ANTHROPIC_API_KEY)
+GEMINI_API_KEY=               # assistente de IA (ou GROQ_API_KEY / ANTHROPIC_API_KEY)
 SPECTRA_GOOGLE_CLIENT_ID=     # login com Google
 SPECTRA_GOOGLE_CLIENT_SECRET=
 SPECTRA_GOOGLE_REDIRECT=https://seudominio/auth/google/callback

@@ -135,10 +135,22 @@ Sem chave, o provedor devolve `nao_configurado` e a análise segue com as etapas
 1 e 2. As chaves nunca aparecem no relatório nem em log.
 
 Assistente com IA (opcional — os dois chats, o da página inicial e o copiloto
-do laudo, passam a responder com IA, em streaming e lembrando a conversa). O
-caminho gratuito é o Groq: crie a chave em https://console.groq.com/keys e
-salve como `GROQ_API_KEY` no `.env`. Essa chave tem prioridade. Para usar o
-Claude, que é pago, deixe ela vazia:
+do laudo, passam a responder com IA, em streaming e lembrando a conversa).
+
+1. No [Google AI Studio](https://aistudio.google.com/api-keys), entre com sua conta,
+   clique em **Create API key**, selecione ou crie um projeto e copie a chave.
+2. Localmente, coloque `GEMINI_API_KEY=sua_chave` no `.env` da raiz e reinicie
+   o servidor. Na hospedagem, adicione `GEMINI_API_KEY` aos segredos do serviço
+   do backend e implante a nova revisão. Mantenha a chave fora do Git e do navegador.
+3. Abra o chat e envie uma pergunta sobre o Spectra. O modelo padrão é
+   `gemini-3.8-flash`. Para alterá-lo, defina `SPECTRA_GEMINI_MODELO`.
+
+O backend usa o cliente HTTP existente. O histórico recente e, no copiloto,
+o laudo aberto são enviados ao provedor configurado. Evite incluir dados
+sensíveis e confira os termos e limites do projeto no Google AI Studio.
+
+Sem a chave Gemini, o Spectra usa o Groq se `GROQ_API_KEY` estiver definida.
+Para selecionar o Claude, deixe as chaves Gemini e Groq vazias:
 
 ```bash
 pip install -e ".[web,ia]"

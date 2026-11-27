@@ -49,10 +49,6 @@
 
   function aplicarTema(tema) {
     raiz.dataset.tema = tema;
-    // O ícone da aba acompanha a escolha do site, inclusive quando difere do sistema.
-    document.querySelectorAll('link[rel="icon"]').forEach(icone => {
-      icone.href = '/static/logo-spectra-' + (tema === 'claro' ? 'claro' : 'escuro') + '.svg';
-    });
   }
 
   function aplicarFonte(nivel) {

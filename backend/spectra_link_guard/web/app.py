@@ -145,7 +145,7 @@ app.add_middleware(ProtecaoHTTP)
 @app.get('/docs', include_in_schema=False)
 async def documentacao():
     from fastapi.openapi.docs import get_swagger_ui_html
-    resposta = get_swagger_ui_html(openapi_url='/openapi.json', title='Spectra — API', swagger_favicon_url='/static/logo-spectra-escuro.svg')
+    resposta = get_swagger_ui_html(openapi_url='/openapi.json', title='Spectra — API', swagger_favicon_url='/static/favicon-spectra.png')
     return HTMLResponse(resposta.body.decode().replace('<script', f'<script nonce="{NONCE.get()}"'))
 
 

@@ -388,8 +388,8 @@ const CONVERSA = [
 
 const PADRAO =
   "Essa eu ainda não consigo responder por aqui. Posso explicar como o Spectra " +
-  "funciona, ajudar com cadastro e senha ou orientar sobre um link suspeito. Para " +
-  "outros assuntos, o e-mail é contato@spectra.app.";
+  "funciona, ajudar com cadastro e senha ou orientar sobre um link suspeito. " +
+  "Tente reformular a pergunta ou enviar de novo em instantes.";
 
 function balao(texto, autor) {
   const linha = document.createElement("div");

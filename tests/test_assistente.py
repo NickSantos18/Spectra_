@@ -393,3 +393,27 @@ def test_erro_do_gemini_preserva_o_contrato_da_rota(cliente, groq, monkeypatch, 
     assert resp.status_code == 502
     assert "chave-gemini-de-teste" not in resp.text
     assert "chave-gemini-de-teste" not in caplog.text
+
+
+def test_gemini_tenta_modelo_reserva_quando_o_principal_retorna_503(cliente, monkeypatch):
+    pedidos = []
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-gemini-de-teste")
+    original = httpx.AsyncClient
+
+    def tratar(pedido):
+        pedidos.append(pedido)
+        if assistente.MODELO_GEMINI in pedido.url.path:
+            return httpx.Response(503)
+        return httpx.Response(200, content=_fluxo(_evento_gemini([{"text": "Resposta."}], "STOP")))
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **opcoes: original(
+        transport=httpx.MockTransport(tratar), **opcoes
+    ))
+
+    resp = cliente.post("/api/assistente", json={"historico": PERGUNTA})
+    assert resp.status_code == 200
+    assert resp.text == "Resposta."
+    assert [pedido.url.path.split("/")[-1] for pedido in pedidos] == [
+        "gemini-3.8-flash:streamGenerateContent",
+        "gemini-3.5-flash-lite:streamGenerateContent",
+    ]

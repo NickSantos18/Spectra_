@@ -144,6 +144,8 @@ do laudo, passam a responder com IA, em streaming e lembrando a conversa).
    do backend e implante a nova revisão. Mantenha a chave fora do Git e do navegador.
 3. Abra o chat e envie uma pergunta sobre o Spectra. O modelo padrão é
    `gemini-3.8-flash`. Para alterá-lo, defina `SPECTRA_GEMINI_MODELO`.
+   Se o Gemini retornar um erro temporário de servidor ou a chamada expirar antes
+   do primeiro trecho, o chat tenta o `gemini-3.5-flash-lite`.
 
 O backend usa o cliente HTTP existente. O histórico recente e, no copiloto,
 o laudo aberto são enviados ao provedor configurado. Evite incluir dados

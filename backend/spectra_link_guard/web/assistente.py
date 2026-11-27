@@ -35,6 +35,7 @@ _BETA_FALLBACK = "server-side-fallback-2026-07-01"
 _MODELOS_COM_FALLBACK = {"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
 
 MODELO_GEMINI = "gemini-3.8-flash"
+MODELO_GEMINI_RESERVA = "gemini-3.5-flash-lite"
 
 URL_GROQ = "https://api.groq.com/openai/v1/chat/completions"
 #: Também trocável por SPECTRA_IA_MODELO. O raciocínio conta no limite de saída.
@@ -183,12 +184,16 @@ def montar_sistema(contexto: Contexto, laudo: dict[str, Any] | None) -> list[dic
     return blocos
 
 
-async def _responder_gemini(
+class GeminiTemporariamenteIndisponivel(RuntimeError):
+    """O provedor retornou um erro tempor?rio antes de concluir."""
+
+
+async def _fluxo_gemini(
     sistema: list[dict[str, Any]],
     mensagens: list[dict[str, str]],
     chave: str,
+    modelo: str,
 ) -> AsyncIterator[str]:
-    modelo = os.environ.get("SPECTRA_GEMINI_MODELO", "").strip() or MODELO_GEMINI
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:streamGenerateContent"
     corpo = {
         "systemInstruction": {"parts": [{"text": bloco["text"]} for bloco in sistema]},
@@ -201,10 +206,12 @@ async def _responder_gemini(
         ],
         "generationConfig": {"maxOutputTokens": 2048},
     }
-    async with httpx.AsyncClient(timeout=60.0) as cliente:
+    async with httpx.AsyncClient(timeout=15.0) as cliente:
         async with cliente.stream(
             "POST", url, params={"alt": "sse"}, json=corpo, headers={"x-goog-api-key": chave}
         ) as resposta:
+            if resposta.status_code in (500, 502, 503, 504):
+                raise GeminiTemporariamenteIndisponivel(f"Gemini respondeu {resposta.status_code}")
             if resposta.status_code != 200:
                 raise RuntimeError(f"Gemini respondeu {resposta.status_code}")
             async for linha in resposta.aiter_lines():
@@ -227,6 +234,27 @@ async def _responder_gemini(
                     if fim == "STOP":
                         return
     raise RuntimeError("A resposta do Gemini terminou sem confirmação de conclusão")
+
+
+async def _responder_gemini(
+    sistema: list[dict[str, Any]],
+    mensagens: list[dict[str, str]],
+    chave: str,
+) -> AsyncIterator[str]:
+    principal = os.environ.get("SPECTRA_GEMINI_MODELO", "").strip() or MODELO_GEMINI
+    modelos = (principal, MODELO_GEMINI_RESERVA) if principal != MODELO_GEMINI_RESERVA else (principal,)
+    for modelo in modelos:
+        enviou_texto = False
+        try:
+            async for pedaco in _fluxo_gemini(sistema, mensagens, chave, modelo):
+                enviou_texto = True
+                yield pedaco
+            return
+        except (GeminiTemporariamenteIndisponivel, httpx.TimeoutException) as erro:
+            if enviou_texto or modelo == modelos[-1]:
+                if isinstance(erro, httpx.TimeoutException):
+                    raise GeminiTemporariamenteIndisponivel("Gemini excedeu o tempo de resposta") from erro
+                raise
 
 
 async def _responder_groq(

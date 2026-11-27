@@ -100,16 +100,18 @@
         await transicaoNativa.finished;
         return;
       }
-      const formulario=document.getElementById('form-perfil');
       const compacto=perfilCompacto();
       const duracaoVoo=compacto?480:tempos.deslocar;
-      formulario?.animate([{opacity:0},{opacity:1}],{
-        duration:compacto?230:tempos.formulario,delay:compacto?100:800,easing:'ease-in-out',fill:'backwards'
-      });
+      if(!compacto){
+        const formulario=document.getElementById('form-perfil');
+        formulario?.animate([{opacity:0},{opacity:1}],{
+          duration:tempos.formulario,delay:800,easing:'ease-in-out',fill:'backwards'
+        });
+      }
       await clone.animate([
         {transform:origemTransform},
         {transform:'translate3d(0,0,0) scale(1,1)'}
-      ],{duration:duracaoVoo,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'}).finished;
+      ],{duration:duracaoVoo,easing:compacto?'cubic-bezier(.25,.1,.25,1)':'cubic-bezier(.45,0,.2,1)',fill:'forwards'}).finished;
       // O avatar real aparece sob a cópia já encaixada, evitando uma troca seca.
       root.dataset.perfilTransicao='encaixando';root.classList.remove('perfil-avatar-voando');
       await clone.animate([{opacity:1},{opacity:0}],{duration:tempos.encaixar,easing:'ease-out',fill:'forwards'}).finished;
@@ -152,6 +154,12 @@
       return;
     }
     if(!Element.prototype.animate)return;
+    if(perfilCompacto()){
+      // O perfil já busca seus dados ao abrir. No celular o voo acontece
+      // inteiro no destino, sem animar antes e ficar parado durante a navegação.
+      try{sessionStorage.setItem(chave,JSON.stringify(origem));}catch{}
+      return;
+    }
     evento.preventDefault();if(navegando)return;navegando=true;
     const clone=document.createElement('div');clone.className='perfil-morph';clone.setAttribute('aria-hidden','true');
     const estilo=getComputedStyle(avatar);
@@ -160,13 +168,13 @@
     clone.append(face(avatar));document.body.append(clone);root.dataset.perfilTransicao='arredondando';
     window.dispatchEvent(new Event('spectra:perfil-transicao'));
     try{
-      const dados=Promise.race([window.spectraCarregarPerfil(true).catch(()=>null),new Promise(resolve=>setTimeout(()=>resolve(null),perfilCompacto()?450:1800))]);
+      const dados=Promise.race([window.spectraCarregarPerfil(true).catch(()=>null),new Promise(resolve=>setTimeout(()=>resolve(null),1800))]);
       link.animate([{opacity:1},{opacity:0}],{duration:220,delay:120,easing:'ease-in-out',fill:'forwards'});
-      await clone.animate([{borderRadius:'0'},{borderRadius:'50%'}],{duration:perfilCompacto()?150:tempos.arredondar,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished;
+      await clone.animate([{borderRadius:'0'},{borderRadius:'50%'}],{duration:tempos.arredondar,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished;
       origem.perfil=await dados;origem.instante=Date.now();
       const glifo=clone.querySelector('.perfil-glifo');
       if(glifo){const r=glifo.getBoundingClientRect();origem.letra={left:r.left,top:r.top,width:r.width,height:r.height};}
-      origem.nativa=!perfilCompacto()&&!!origem.perfil&&'onpagereveal' in window;
+      origem.nativa=!!origem.perfil&&'onpagereveal' in window;
       if(origem.nativa)root.classList.add('perfil-transicao-nativa');
       try{sessionStorage.setItem(chave,JSON.stringify(origem));}catch{}
       location.assign(link.href);

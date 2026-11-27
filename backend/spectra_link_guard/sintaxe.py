@@ -18,7 +18,7 @@ import ipaddress
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 from .dados import (
     CONFUSAVEIS,
@@ -197,10 +197,18 @@ class ContextoURL:
     dominio_registravel: str = ""
     subdominios: list[str] = field(default_factory=list)
     e_ip: bool = False
+    segredo_na_query: bool = False
     ip_escrito_como: str = ""  # forma disfarçada do IP, quando o link não usa a notação comum
 
 
 _RE_URL_EMBUTIDA = re.compile(r"https?://", re.IGNORECASE)
+
+
+_PARAMETROS_SENSIVEIS = {
+    "token", "access_token", "refresh_token", "id_token", "session", "session_id",
+    "sessionid", "sid", "api_key", "apikey", "password", "passwd", "senha",
+    "auth_token", "reset_token", "x_amz_signature", "x_amz_security_token",
+}
 
 
 def normalizar(url: str) -> ContextoURL:
@@ -209,6 +217,10 @@ def normalizar(url: str) -> ContextoURL:
     ctx = ContextoURL(url_original=bruta)
     if not bruta:
         ctx.erro = "URL vazia."
+        return ctx
+
+    if any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in bruta) or "\\" in bruta:
+        ctx.erro = "A URL tem espaços, caracteres de controle ou barras invertidas."
         return ctx
 
     # Aceita "itau.com.br/login" (sem esquema) tratando-a como relativa a protocolo.
@@ -227,6 +239,10 @@ def normalizar(url: str) -> ContextoURL:
     ctx.caminho = p.path
     ctx.query = p.query
     ctx.fragmento = p.fragment
+    ctx.segredo_na_query = any(
+        chave.casefold().replace("-", "_") in _PARAMETROS_SENSIVEIS and bool(valor)
+        for chave, valor in parse_qsl(p.query)
+    )
 
     host_bruto = (p.hostname or "").lower()
     if not host_bruto and ctx.esquema not in ESQUEMAS_PERIGOSOS:
@@ -286,7 +302,7 @@ def _checar_esquema(ctx: ContextoURL) -> list[Achado]:
 def _checar_ofuscacao(ctx: ContextoURL) -> list[Achado]:
     """Técnicas que escondem do usuário para onde o link realmente leva."""
     achados: list[Achado] = []
-    if ctx.usuario:
+    if ctx.usuario is not None:
         achados.append(
             Achado(
                 codigo="userinfo_no_host",
@@ -633,10 +649,10 @@ def checklist_heuristico(ctx: ContextoURL, achados: list[Achado]) -> list[Criter
         CriterioChecklist(
             codigo="arroba_na_url",
             rotulo="Sem '@' escondendo o destino",
-            passou=not ctx.usuario,
+            passou=ctx.usuario is None,
             motivo=(
                 f"Tudo antes de '@' é ignorado pelo navegador — o destino real é '{ctx.host}'."
-                if ctx.usuario
+                if ctx.usuario is not None
                 else "Não há '@' antes do domínio."
             ),
         )
@@ -808,6 +824,15 @@ def analisar_sintaxe(url: str) -> tuple[ContextoURL, list[Achado]]:
     if ctx.esquema in ESQUEMAS_PERIGOSOS:
         return ctx, achados  # não há host para analisar
     achados += _checar_ofuscacao(ctx)
+    if ctx.segredo_na_query:
+        achados.append(Achado(
+            codigo="segredo_na_url",
+            titulo="A URL pode carregar uma credencial ou token",
+            severidade=Severidade.ALTA,
+            detalhe="Um parâmetro preenchido usa um nome comum de sessão, senha ou chave. "
+                    "URLs podem aparecer em históricos, registros ou mensagens compartilhadas.",
+            recomendacao="Evite compartilhar este endereço. Abra o serviço pelo canal oficial.",
+        ))
     achados += _checar_estrutura_do_dominio(ctx)
     achados += _checar_unicode(ctx)
     achados += _checar_marcas(ctx)

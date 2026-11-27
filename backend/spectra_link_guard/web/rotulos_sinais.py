@@ -9,6 +9,7 @@ from __future__ import annotations
 
 ROTULOS_SINAIS: dict[str, str] = {
     # sintaxe
+    "segredo_na_url": "Possível credencial na URL",
     "url_invalida": "URL inválida",
     "esquema_perigoso": "Esquema perigoso",
     "esquema_ausente": "Sem protocolo",

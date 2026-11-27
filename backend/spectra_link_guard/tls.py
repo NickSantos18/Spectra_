@@ -186,7 +186,8 @@ def achados_de_tls(ctx: ContextoURL, info: CertificadoTLS) -> list[Achado]:
                 severidade=Severidade.ALTA,
                 detalhe=(
                     "Tudo que for digitado nessa página trafega em texto puro e pode ser "
-                    "lido por quem estiver na mesma rede."
+                    "lido ou alterado ao longo do caminho. Cookies de sessão sem a flag Secure "
+                    "também podem ficar expostos."
                 ),
                 recomendacao="Nunca informe senha, CPF ou cartão em páginas sem cadeado.",
                 evidencia={"esquema": "http"},

@@ -344,7 +344,13 @@ function renderVeredito(r) {
   const [inicio, resto] = limitada&&poucosSinais ? ['Verificação limitada','não confirma segurança'] : SENTENCA[r.nivel] || SENTENCA.atencao;
   $('q-veredito').classList.toggle('verificacao-limitada',limitada&&poucosSinais);
   $('verificacao-cobertura').hidden=!limitada;
-  $('verificacao-cobertura').textContent=limitada?'Reputação não confirmada: nenhum provedor retornou resultado conclusivo.':'';
+  const consultaProtegida=(r.achados || []).some(a=>['segredo_na_url','userinfo_no_host'].includes(a.codigo));
+  $('verificacao-cobertura').textContent=limitada
+    ? (consultaProtegida
+      ? 'Consulta de reputação omitida para proteger dados presentes no endereço.'
+      : 'Reputação não confirmada: nenhum provedor retornou resultado conclusivo.')
+    : '';
+  $('verificacao-cookies').hidden=false;
   const sentenca = $("sentenca");
 
   const icone = $("veredito-icone");

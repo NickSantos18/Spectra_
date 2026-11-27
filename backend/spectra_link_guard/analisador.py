@@ -19,6 +19,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 
+from .dados import ESQUEMAS_PERIGOSOS
 from .models import AnaliseLink, CertificadoTLS, ResultadoReputacao
 from .pontuacao import calcular
 from .rede import (
@@ -65,7 +66,7 @@ class ConfiguracaoLinkGuard:
 def _url_para_consulta(ctx: ContextoURL) -> str:
     """Reconstrói a URL absoluta usada nas consultas de reputação."""
     if ctx.esquema in ("http", "https"):
-        return ctx.url_normalizada
+        return ctx.url_normalizada.split("#", 1)[0]
     autoridade = ctx.host_ascii + (f":{ctx.porta}" if ctx.porta else "")
     cauda = ctx.caminho + (f"?{ctx.query}" if ctx.query else "")
     return f"https://{autoridade}{cauda}"
@@ -91,12 +92,15 @@ class LinkGuard:
 
         # URL irrecuperável ou esquema que sequer aponta para um site: paramos
         # aqui — não há host para consultar e não faria sentido tocar a rede.
-        if not ctx.valida or not ctx.host_ascii:
+        if not ctx.valida or not ctx.host_ascii or ctx.esquema in ESQUEMAS_PERIGOSOS:
             relatorio.achados = achados
             relatorio.risco, relatorio.nivel, relatorio.resumo = calcular(achados)
             return relatorio
 
-        alvo = _url_para_consulta(ctx)
+        if ctx.esquema == "http":
+            achados += achados_de_tls(ctx, CertificadoTLS())
+
+        reputacao_permitida = cfg.verificar_reputacao and not (ctx.usuario is not None or ctx.segredo_na_query)
 
         async def _tls() -> CertificadoTLS | None:
             if not cfg.verificar_tls:
@@ -104,10 +108,10 @@ class LinkGuard:
             return await inspecionar_tls(ctx, timeout=cfg.timeout_tls)
 
         async def _reputacao() -> list[ResultadoReputacao]:
-            if not cfg.verificar_reputacao:
+            if not reputacao_permitida:
                 return []
             return await consultar_reputacao(
-                alvo,
+                _url_para_consulta(ctx),
                 chave_gsb=cfg.chave_gsb,
                 chave_vt=cfg.chave_vt,
                 chave_phishtank=cfg.chave_phishtank,
@@ -125,8 +129,9 @@ class LinkGuard:
 
         if info_tls is not None:
             relatorio.tls = info_tls
-            achados += achados_de_tls(ctx, info_tls)
-        if cfg.verificar_reputacao:
+            if ctx.esquema != "http":
+                achados += achados_de_tls(ctx, info_tls)
+        if reputacao_permitida:
             relatorio.reputacao = reputacao
             achados += achados_de_reputacao(reputacao)
         if rede is not None:

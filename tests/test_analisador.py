@@ -74,6 +74,46 @@ def test_modo_offline_nao_preenche_tls_nem_reputacao():
     assert r.reputacao == []
 
 
+def test_entrada_com_espacos_nao_pode_parecer_segura():
+    r = analisar("isto nao e um endereco")
+    assert r.nivel is NivelRisco.CRITICO
+    assert r.achados[0].codigo == "url_invalida"
+
+
+def test_http_revela_risco_para_sessao_mesmo_offline():
+    r = analisar("http://example.com")
+    assert any(a.codigo == "sem_https" and "Cookies" in a.detalhe for a in r.achados)
+    assert r.risco >= 30
+    assert r.tls is None
+
+
+def test_credenciais_sao_detectadas_sem_enviar_url_para_reputacao(monkeypatch):
+    from spectra_link_guard import analisador
+
+    async def nao_deveria_consultar(*args, **kwargs):
+        raise AssertionError("URL sensível enviada a terceiro")
+
+    monkeypatch.setattr(analisador, "consultar_reputacao", nao_deveria_consultar)
+    cfg = ConfiguracaoLinkGuard(verificar_tls=False, verificar_registro=False)
+    r = analisar_url("https://example.com/?%61ccess_token=segredo-de-teste", cfg)
+    sinal = next(a for a in r.achados if a.codigo == "segredo_na_url")
+    assert "segredo-de-teste" not in str(sinal)
+    assert r.reputacao == []
+    assert r.verificacao["limitada"]
+
+
+def test_fragmento_nao_e_enviado_a_provedores_de_reputacao(monkeypatch):
+    from spectra_link_guard import analisador
+
+    async def capturar(url, **kwargs):
+        assert url == "https://example.com/?idioma=pt"
+        return []
+
+    monkeypatch.setattr(analisador, "consultar_reputacao", capturar)
+    cfg = ConfiguracaoLinkGuard(verificar_tls=False, verificar_registro=False)
+    analisar_url("https://example.com/?idioma=pt#fragmento-de-teste", cfg)
+
+
 # --------------------------------------------------------------------------- #
 # Achados derivados do certificado (com dados simulados, sem handshake real)
 # --------------------------------------------------------------------------- #

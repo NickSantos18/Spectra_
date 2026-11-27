@@ -339,6 +339,7 @@ def test_configuracoes_ficam_junto_do_tema_nas_telas_de_interface(cliente):
     for rota in rotas + [rota for rota, _ in TELAS_DO_PAINEL]:
         html = cliente.get(rota).text
         assert html.count('class="config-botao"') == 1, rota
+        assert html.count("data-abrir-configuracoes") == 1, rota
         assert html.count('id="a11y-painel"') == 1, rota
         assert html.index('class="canto-superior"') < html.index('class="config-botao"') < html.index('data-a11y-tema'), rota
 
